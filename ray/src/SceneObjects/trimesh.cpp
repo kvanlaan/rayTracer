@@ -96,6 +96,12 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
 	// YOUR CODE HERE
 	//
 	// FIXME: Add ray-trimesh intersection
+//    auto test = r.at(i);
+//    if()
+//    {
+//    isect.setUVCoordinates();
+//    isect.setT();
+//    }
 
 	return false;
 }

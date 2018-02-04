@@ -67,6 +67,8 @@ private:
 	int samples;
 	std::unique_ptr<Scene> scene;
 
+    int width, height;
+
 	bool m_bBufferReady;
 
 };

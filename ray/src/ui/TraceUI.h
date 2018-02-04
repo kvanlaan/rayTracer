@@ -27,7 +27,7 @@ public:
 	virtual void alert(const string& msg) = 0;
 
 	// setters
-	virtual void setRayTracer(RayTracer* r) { raytracer = r; }
+    virtual void setRayTracer(RayTracer* r) { raytracer = r; }
 	void useCubeMap(bool b) { m_usingCubeMap = b; }
 
 	// accessors:

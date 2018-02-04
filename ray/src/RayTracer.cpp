@@ -42,9 +42,9 @@ glm::dvec3 RayTracer::trace(double x, double y)
 	ray r(glm::dvec3(0,0,0), glm::dvec3(0,0,0), glm::dvec3(1,1,1), ray::VISIBILITY);
 	scene->getCamera().rayThrough(x,y,r);
 	double dummy;
-	glm::dvec3 ret = traceRay(r, glm::dvec3(1.0,1.0,1.0), traceUI->getDepth(), dummy);
+    glm::dvec3 ret = traceRay(r, glm::dvec3(1.0,1.0,1.0), traceUI->getDepth(), dummy);
 	ret = glm::clamp(ret, 0.0, 1.0);
-	return ret;
+    return ret;
 }
 
 glm::dvec3 RayTracer::tracePixel(int i, int j)
@@ -77,7 +77,7 @@ glm::dvec3 RayTracer::traceRay(ray& r, const glm::dvec3& thresh, int depth, doub
 	std::cerr << "== current depth: " << depth << std::endl;
 #endif
 
-	if(scene->intersect(r, i)) {
+    if(scene->intersect(r, i)) {
 		// YOUR CODE HERE
 
 		// An intersection occurred!  We've got work to do.  For now,
@@ -90,7 +90,18 @@ glm::dvec3 RayTracer::traceRay(ray& r, const glm::dvec3& thresh, int depth, doub
 		// rays.
 
 		const Material& m = i.getMaterial();
-		colorC = m.shade(scene.get(), r, i);
+        colorC = m.shade(scene.get(), r, i);
+//        auto ptr = scene->beginObjects();
+//        while(ptr != scene->endObjects())
+//        {
+//            auto geo = ptr->get();
+//            make a copy of i
+//            auto new_i = i;
+//            if(geo->intersect(r, new_i))
+//            {
+//                  traceRay(r);
+//            }
+//        }
 	} else {
 		// No intersection.  This ray travels to infinity, so we color
 		// it according to the background color, which in this (simple) case
@@ -215,6 +226,17 @@ void RayTracer::traceImage(int w, int h)
 	// Always call traceSetup before rendering anything.
 	traceSetup(w,h);
 
+    width = w;
+    height = h;
+
+    for(int x  = 0; x < w; ++x)
+    {
+        for(int y = 0; y < h; ++y)
+        {
+            tracePixel(x, y);
+        }
+    }
+
 	// YOUR CODE HERE
 	// FIXME: Start one or more threads for ray tracing
 	//
@@ -225,6 +247,32 @@ void RayTracer::traceImage(int w, int h)
 	//       while rendering.
 }
 
+double interpolate( vector<double> &xData, vector<double> &yData, double x, bool extrapolate )
+{
+   int size = xData.size();
+
+   int i = 0;                                                                  // find left end of interval for interpolation
+   if ( x >= xData[size - 2] )                                                 // special case: beyond right end
+   {
+      i = size - 2;
+   }
+   else
+   {
+      while ( x > xData[i+1] ) i++;
+   }
+   double xL = xData[i], yL = yData[i], xR = xData[i+1], yR = yData[i+1];      // points on either side (unless beyond ends)
+   if ( !extrapolate )                                                         // if beyond ends of array and not extrapolating
+   {
+      if ( x < xL ) yR = yL;
+      if ( x > xR ) yL = yR;
+   }
+
+   double dydx = ( yR - yL ) / ( xR - xL );                                    // gradient
+
+   return yL + dydx * ( x - xL );                                              // linear interpolation
+}
+
+//anti-aliasing for 1, 4, 9, or 16 samples
 int RayTracer::aaImage()
 {
 	// YOUR CODE HERE
@@ -232,7 +280,18 @@ int RayTracer::aaImage()
 	//
 	// TIP: samples and aaThresh have been synchronized with TraceUI by
 	//      RayTracer::traceSetup() function
-	return 0;
+
+//    const auto thresh = TraceUI::getAaThreshold();
+
+//    for(int x = 0; x < width; ++x)
+//    {
+//        for(int y = 0; y < height; ++y)
+//        {
+
+//        }
+//    }
+
+    return 0;
 }
 
 bool RayTracer::checkRender()

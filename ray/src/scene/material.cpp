@@ -21,6 +21,15 @@ glm::dvec3 Material::shade(Scene* scene, const ray& r, const isect& i) const
 {
 	// YOUR CODE HERE
 
+//    std::vector<glm::dvec3> color_options;
+    std::vector<double> attens;
+
+    for(const auto& light : scene->getAllLights())
+    {
+        auto dist_atten = light->distanceAttenuation(i.getN());
+        attens.push_back(dist_atten);
+    }
+
 	// For now, this method just returns the diffuse color of the object.
 	// This gives a single matte color for every distinct surface in the
 	// scene, and that's it.  Simple, but enough to get you started.
@@ -45,7 +54,12 @@ glm::dvec3 Material::shade(Scene* scene, const ray& r, const isect& i) const
 	// 		.
 	// 		.
 	// }
-	return kd(i);
+    auto ey = kd(i);
+    auto o  = kd(i) * (std::accumulate(attens.begin(), attens.end(), 0.0)/attens.size());
+    if(!attens.empty())
+        return kd(i) * (std::accumulate(attens.begin(), attens.end(), 0.0)/attens.size());
+    else
+        return kd(i);
 }
 
 TextureMap::TextureMap(string filename)
