@@ -38,7 +38,7 @@ public:
 	double aspectRatio();
 
 	void traceImage(int w, int h);
-	int aaImage();
+    int aaImage(const int samples);
 	bool checkRender();
 	void waitRender();
 

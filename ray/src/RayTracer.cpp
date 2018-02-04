@@ -272,8 +272,42 @@ double interpolate( vector<double> &xData, vector<double> &yData, double x, bool
    return yL + dydx * ( x - xL );                                              // linear interpolation
 }
 
+
+/**
+ * @brief BilinearInterpolation calculates a bilinearly interpolated point, given 4 nearest neighbors
+ * @param q11 value at lower left
+ * @param q12 value at upper left
+ * @param q21 value at lower right
+ * @param q22 value at upper right
+ * @param x1 x-coord of q11, q12
+ * @param x2 x-coord of q21, q22
+ * @param y1 y-coord of q11, q21
+ * @param y2 y-coord of q12, q22
+ * @param x x-coord of desired interp point
+ * @param y y-coord of desired interp point
+ * @return
+ */
+inline float
+BilinearInterpolation(float q11, float q12, float q21, float q22, float x1, float x2, float y1, float y2, float x, float y)
+{
+    float x2x1, y2y1, x2x, y2y, yy1, xx1;
+    x2x1 = x2 - x1;
+    y2y1 = y2 - y1;
+    x2x = x2 - x;
+    y2y = y2 - y;
+    yy1 = y - y1;
+    xx1 = x - x1;
+    return 1.0 / (x2x1 * y2y1) * (
+        q11 * x2x * y2y +
+        q21 * xx1 * y2y +
+        q12 * x2x * yy1 +
+        q22 * xx1 * yy1
+    );
+}
+
+
 //anti-aliasing for 1, 4, 9, or 16 samples
-int RayTracer::aaImage()
+int RayTracer::aaImage(const int samples)
 {
 	// YOUR CODE HERE
 	// FIXME: Implement Anti-aliasing here
@@ -281,13 +315,34 @@ int RayTracer::aaImage()
 	// TIP: samples and aaThresh have been synchronized with TraceUI by
 	//      RayTracer::traceSetup() function
 
-//    const auto thresh = TraceUI::getAaThreshold();
+//    const auto thresh = getAaThreshold();
 
 //    for(int x = 0; x < width; ++x)
 //    {
 //        for(int y = 0; y < height; ++y)
 //        {
+//            //            for(auto y = altminmax.first; y <= altminmax.second; y += alt_step)
+//            //            {
+//            auto y2 = bounded_index(alts.begin(), alts.end(), y);
+//            if(y2<1)
+//                y2 = 1;
+//            auto y1 = y2-1;
 
+//            std::vector<float> row;
+//            //                for(auto x = wavminmax.first; x <= wavminmax.second; x += wav_step)
+//            //                {
+//            auto x2 = bounded_index(wavelengths.begin(), wavelengths.end(), x);
+//            if(x2<1)
+//                x2 = 1;
+//            auto x1 = x2-1;
+
+//            auto q11 = data[y1][x1];
+//            auto q12 = data[y2][x1];
+//            auto q22 = data[y2][x2];
+//            auto q21 = data[y1][x2];
+//            row.push_back(BilinearInterpolation(q11, q12, q21, q22, wavelengths[x1], wavelengths[x2], alts[y1], alts[y2], x, y));
+//            //                }
+//            retval.push_back(row);
 //        }
 //    }
 

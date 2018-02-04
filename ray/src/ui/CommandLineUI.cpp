@@ -84,7 +84,8 @@ int CommandLineUI::run()
 		raytracer->traceImage(width, height);
 		raytracer->waitRender();
 		if (aaSwitch()) {
-			raytracer->aaImage();
+            //TODO: get the proper antialiasing number from somewhere
+            raytracer->aaImage(4);
 			raytracer->waitRender();
 		}
 
