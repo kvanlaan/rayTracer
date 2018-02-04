@@ -7,6 +7,10 @@
 #include "../ui/TraceUI.h"
 extern TraceUI* traceUI;
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
 using namespace std;
 
 Trimesh::~Trimesh()
@@ -60,7 +64,7 @@ const char* Trimesh::doubleCheck()
 {
 	if (!materials.empty() && materials.size() != vertices.size())
 		return "Bad Trimesh: Wrong number of materials.";
-	if (!normals.empty() && normals.size() != vertices.size())
+    if (!normals.empty() && normals.size() != vertices.size())
 		return "Bad Trimesh: Wrong number of normals.";
 
 	return 0;
@@ -93,17 +97,31 @@ bool TrimeshFace::intersect(ray& r, isect& i) const
 // intersection in u (alpha) and v (beta).
 bool TrimeshFace::intersectLocal(ray& r, isect& i) const
 {
-	// YOUR CODE HERE
-	//
-	// FIXME: Add ray-trimesh intersection
-//    auto test = r.at(i);
-//    if()
-//    {
-//    isect.setUVCoordinates();
-//    isect.setT();
-//    }
+// YOUR CODE HERE
+//
+// FIXME: Add ray-trimesh intersection
+   glm::dvec3 p = r.getPosition();
+   glm::dvec3 d = r.getDirection();
 
-	return false;
+   glm::dvec3 a_coords = parent->vertices[ids[0]];
+   glm::dvec3 b_coords = parent->vertices[ids[1]];
+   glm::dvec3 c_coords = parent->vertices[ids[2]];
+   auto n = normal;
+
+    glm::dvec3 t = (glm::dot(n, p) + d)/ (glm::dot(n,d));
+    glm::dvec3 q = p + (t*d);
+//    isect.setT(t);
+//    isect.setMaterial(isect.getMaterial());
+
+    if((glm::dot(glm::cross((b_coords - a_coords), (q - a_coords)), n)) >= 0)
+            return false;
+
+    if((glm::dot(glm::cross((c_coords - b_coords), (q - b_coords)), n)) >= 0)
+            return false;
+
+    if((glm::dot(glm::cross((a_coords - c_coords), (q - c_coords)), n))  >= 0)
+            return false;
+   return true;
 }
 
 // Once all the verts and faces are loaded, per vertex normals can be
