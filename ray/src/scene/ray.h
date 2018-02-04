@@ -49,6 +49,7 @@ public:
 	void setDirection(const glm::dvec3& dd) { d = dd; }
 
 private:
+    //origin of the ray
 	glm::dvec3 p;
 	glm::dvec3 d;
 	glm::dvec3 atten;
