@@ -21,7 +21,6 @@ glm::dvec3 Material::shade(Scene* scene, const ray& r, const isect& i) const
 {
 	// YOUR CODE HERE
 
-//    std::vector<glm::dvec3> color_options;
     std::vector<double> attens;
 
     for(const auto& light : scene->getAllLights())

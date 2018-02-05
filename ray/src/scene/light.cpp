@@ -19,6 +19,7 @@ glm::dvec3 DirectionalLight::shadowAttenuation(const ray& r, const glm::dvec3& p
 {
 	// YOUR CODE HERE:
 	// You should implement shadow-handling code here.
+
 	return glm::dvec3(1.0, 1.0, 1.0);
 }
 
@@ -34,8 +35,6 @@ glm::dvec3 DirectionalLight::getDirection(const glm::dvec3& P) const
 
 double PointLight::distanceAttenuation(const glm::dvec3& P) const
 {
-//    auto pos = this->position
-
     auto distance = std::sqrt(std::pow(position[0] - P[0], 2) +
             std::pow(position[1] - P[1], 2) +
             std::pow(position[2] - P[2], 2));
@@ -72,6 +71,26 @@ glm::dvec3 PointLight::shadowAttenuation(const ray& r, const glm::dvec3& p) cons
 {
 	// YOUR CODE HERE:
 	// You should implement shadow-handling code here.
+
+//    auto distance = std::sqrt(std::pow(position[0] - P[0], 2) +
+//            std::pow(position[1] - P[1], 2) +
+//            std::pow(position[2] - P[2], 2));
+
+//    auto intersection =
+//    scene->intersect(r, )
+
+//    function PointLight::shadowAttenuation(scene, P)
+//    d = (l.position - P).normalize()
+//     (t, N, mtrl) ← scene.intersect(P, d)
+//    Q ← ray(t)
+//    if Q is before the light source then:
+//     atten = 0
+//    else
+//     atten = 1
+//    end if
+//     return atten
+//    end function
+
 	return glm::dvec3(1,1,1);
 }
 
