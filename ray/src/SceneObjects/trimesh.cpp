@@ -128,8 +128,31 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
     i.setMaterial(this->getMaterial());
     i.setT(t);
 
-    // default to one normal until phong interpolation is set up
+    if(parent->vertNorms) {
+    auto uNumerator = (glm::dot(glm::cross((c_coords - a_coords), (P - a_coords)), n));
+
+    auto uDenominator = (glm::dot(glm::cross((c_coords - a_coords), (b_coords - a_coords)), n));
+
+    auto u = uNumerator/uDenominator;
+
+    auto vNumerator = (glm::dot(glm::cross((c_coords - a_coords), (P - a_coords)), n));
+
+    auto vDenominator = (glm::dot(glm::cross((b_coords - a_coords), (c_coords - a_coords)), n));
+
+    auto v = vNumerator/vDenominator;
+    auto t = 1 - u - v;
+    
+    glm::dvec3 new_norm;
+
+    glm::dvec3 a_norm = parent->normals[ids[0]];
+    glm::dvec3 b_norm = parent->normals[ids[1]];
+    glm::dvec3 c_norm = parent->normals[ids[2]];
+    new_norm = (t*a_norm) + (u*b_norm) + (v*c_norm);
+
+    i.setN(new_norm);
+    } else {
     i.setN(n);
+    }
     return true;
 }
 
