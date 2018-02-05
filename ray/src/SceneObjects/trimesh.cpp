@@ -15,81 +15,81 @@ using namespace std;
 
 Trimesh::~Trimesh()
 {
-	for (auto m : materials)
-		delete m;
-	for (auto f : faces)
-		delete f;
+    for (auto m : materials)
+        delete m;
+    for (auto f : faces)
+        delete f;
 }
 
 // must add vertices, normals, and materials IN ORDER
 void Trimesh::addVertex(const glm::dvec3& v)
 {
-	vertices.emplace_back(v);
+    vertices.emplace_back(v);
 }
 
 void Trimesh::addMaterial(Material* m)
 {
-	materials.emplace_back(m);
+    materials.emplace_back(m);
 }
 
 void Trimesh::addNormal(const glm::dvec3& n)
 {
-	normals.emplace_back(n);
+    normals.emplace_back(n);
 }
 
 // Returns false if the vertices a,b,c don't all exist
 bool Trimesh::addFace(int a, int b, int c)
 {
-	int vcnt = vertices.size();
+    int vcnt = vertices.size();
 
-	if (a >= vcnt || b >= vcnt || c >= vcnt)
-		return false;
+    if (a >= vcnt || b >= vcnt || c >= vcnt)
+        return false;
 
-	TrimeshFace* newFace = new TrimeshFace(
-	        scene, new Material(*this->material), this, a, b, c);
-	newFace->setTransform(this->transform);
-	if (!newFace->degen)
-		faces.push_back(newFace);
-	else
-		delete newFace;
+    TrimeshFace* newFace = new TrimeshFace(
+                scene, new Material(*this->material), this, a, b, c);
+    newFace->setTransform(this->transform);
+    if (!newFace->degen)
+        faces.push_back(newFace);
+    else
+        delete newFace;
 
-	// Don't add faces to the scene's object list so we can cull by bounding
-	// box
-	return true;
+    // Don't add faces to the scene's object list so we can cull by bounding
+    // box
+    return true;
 }
 
 // Check to make sure that if we have per-vertex materials or normals
 // they are the right number.
 const char* Trimesh::doubleCheck()
 {
-	if (!materials.empty() && materials.size() != vertices.size())
-		return "Bad Trimesh: Wrong number of materials.";
+    if (!materials.empty() && materials.size() != vertices.size())
+        return "Bad Trimesh: Wrong number of materials.";
     if (!normals.empty() && normals.size() != vertices.size())
-		return "Bad Trimesh: Wrong number of normals.";
+        return "Bad Trimesh: Wrong number of normals.";
 
-	return 0;
+    return 0;
 }
 
 bool Trimesh::intersectLocal(ray& r, isect& i) const
 {
-	bool have_one = false;
-	for (auto face : faces) {
-		isect cur;
-		if (face->intersectLocal(r, cur)) {
-			if (!have_one || (cur.getT() < i.getT())) {
-				i = cur;
-				have_one = true;
-			}
-		}
-	}
-	if (!have_one)
-		i.setT(1000.0);
-	return have_one;
+    bool have_one = false;
+    for (auto face : faces) {
+        isect cur;
+        if (face->intersectLocal(r, cur)) {
+            if (!have_one || (cur.getT() < i.getT())) {
+                i = cur;
+                have_one = true;
+            }
+        }
+    }
+    if (!have_one)
+        i.setT(1000.0);
+    return have_one;
 }
 
 bool TrimeshFace::intersect(ray& r, isect& i) const
 {
-	return intersectLocal(r, i);
+    return intersectLocal(r, i);
 }
 
 // Intersect ray r with the triangle abc.  If it hits returns true,
@@ -97,61 +97,64 @@ bool TrimeshFace::intersect(ray& r, isect& i) const
 // intersection in u (alpha) and v (beta).
 bool TrimeshFace::intersectLocal(ray& r, isect& i) const
 {
-// YOUR CODE HERE
-//
-// FIXME: Add ray-trimesh intersection
-   //origin
-   glm::dvec3 p = r.getPosition();
-   // direction
-   glm::dvec3 d = r.getDirection();
-   glm::dvec3 a_coords = parent->vertices[ids[0]];
-   glm::dvec3 b_coords = parent->vertices[ids[1]];
-   glm::dvec3 c_coords = parent->vertices[ids[2]];
-   auto n = normal;
+    // YOUR CODE HERE
+    //
+    // FIXME: Add ray-trimesh intersection
+    //origin
+    glm::dvec3 p = r.getPosition();
+    // direction
+    glm::dvec3 d = r.getDirection();
+    glm::dvec3 a_coords = parent->vertices[ids[0]];
+    glm::dvec3 b_coords = parent->vertices[ids[1]];
+    glm::dvec3 c_coords = parent->vertices[ids[2]];
+    auto n = normal;
 
     if(glm::dot(d, n) == 0){
         return false;
     }
 
     double t = (glm::dot((a_coords - p), n))/(glm::dot(d,n));
-     glm::dvec3 P = r.at(t);
+    glm::dvec3 P = r.at(t);
 
     if((glm::dot(glm::cross((b_coords - a_coords), (P - a_coords)), n)) < 0)
-            return false;
+        return false;
 
     if((glm::dot(glm::cross((c_coords - b_coords), (P - b_coords)), n)) < 0)
-            return false;
+        return false;
 
     if((glm::dot(glm::cross((a_coords - c_coords), (P - c_coords)), n))  < 0)
-            return false;
+        return false;
     i.setObject(this);
     i.setMaterial(this->getMaterial());
     i.setT(t);
 
     if(parent->vertNorms) {
-    auto uNumerator = (glm::dot(glm::cross((c_coords - a_coords), (P - a_coords)), n));
+        auto uNumerator = (glm::dot(glm::cross((c_coords - a_coords), (P - a_coords)), n));
+        auto uDenominator = (glm::dot(glm::cross((c_coords - a_coords), (b_coords - a_coords)), n));
+        auto u = uNumerator/uDenominator;
+        auto vNumerator = (glm::dot(glm::cross((c_coords - a_coords), (P - a_coords)), n));
+        auto vDenominator = (glm::dot(glm::cross((b_coords - a_coords), (c_coords - a_coords)), n));
+        auto v = vNumerator/vDenominator;
+        auto thirdBary = 1 - u - v;
 
-    auto uDenominator = (glm::dot(glm::cross((c_coords - a_coords), (b_coords - a_coords)), n));
+        glm::dvec3 a_norm = parent->normals[ids[0]];
+        glm::dvec3 b_norm = parent->normals[ids[1]];
+        glm::dvec3 c_norm = parent->normals[ids[2]];
 
-    auto u = uNumerator/uDenominator;
+        glm::dvec3 new_norm = (thirdBary *a_norm) + (u*b_norm) + (v*c_norm);
+        new_norm = glm::normalize(new_norm);
 
-    auto vNumerator = (glm::dot(glm::cross((c_coords - a_coords), (P - a_coords)), n));
-
-    auto vDenominator = (glm::dot(glm::cross((b_coords - a_coords), (c_coords - a_coords)), n));
-
-    auto v = vNumerator/vDenominator;
-    auto t = 1 - u - v;
-    
-    glm::dvec3 new_norm;
-
-    glm::dvec3 a_norm = parent->normals[ids[0]];
-    glm::dvec3 b_norm = parent->normals[ids[1]];
-    glm::dvec3 c_norm = parent->normals[ids[2]];
-    new_norm = (t*a_norm) + (u*b_norm) + (v*c_norm);
-
-    i.setN(new_norm);
+        if(parent->materials.size() > 0) {
+            Material new_material;
+            new_material+= t * (*parent->materials[ids[0]]);
+            new_material+= u * (*parent->materials[ids[1]]);
+            new_material+= v * (*parent->materials[ids[2]]);
+            i.setMaterial(new_material);
+        }
+        i.setN(new_norm);
+        i.setUVCoordinates( glm::dvec2(u, v) );
     } else {
-    i.setN(n);
+        i.setN(n);
     }
     return true;
 }
@@ -160,24 +163,24 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
 // generated by averaging the normals of the neighboring faces.
 void Trimesh::generateNormals()
 {
-	int cnt = vertices.size();
-	normals.resize(cnt);
-	std::vector<int> numFaces(cnt, 0);
+    int cnt = vertices.size();
+    normals.resize(cnt);
+    std::vector<int> numFaces(cnt, 0);
 
-	for (auto face : faces) {
-		glm::dvec3 faceNormal = face->getNormal();
+    for (auto face : faces) {
+        glm::dvec3 faceNormal = face->getNormal();
 
-		for (int i = 0; i < 3; ++i) {
-			normals[(*face)[i]] += faceNormal;
-			++numFaces[(*face)[i]];
-		}
-	}
+        for (int i = 0; i < 3; ++i) {
+            normals[(*face)[i]] += faceNormal;
+            ++numFaces[(*face)[i]];
+        }
+    }
 
-	for (int i = 0; i < cnt; ++i) {
-		if (numFaces[i])
-			normals[i] /= numFaces[i];
-	}
+    for (int i = 0; i < cnt; ++i) {
+        if (numFaces[i])
+            normals[i] /= numFaces[i];
+    }
 
-	vertNorms = true;
+    vertNorms = true;
 }
 
