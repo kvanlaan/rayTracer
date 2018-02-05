@@ -100,28 +100,37 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
 // YOUR CODE HERE
 //
 // FIXME: Add ray-trimesh intersection
+   //origin
    glm::dvec3 p = r.getPosition();
+   // direction
    glm::dvec3 d = r.getDirection();
-
    glm::dvec3 a_coords = parent->vertices[ids[0]];
    glm::dvec3 b_coords = parent->vertices[ids[1]];
    glm::dvec3 c_coords = parent->vertices[ids[2]];
    auto n = normal;
 
-    glm::dvec3 t = (glm::dot(n, p) + d)/ (glm::dot(n,d));
-    glm::dvec3 q = p + (t*d);
-//    isect.setT(t);
-//    isect.setMaterial(isect.getMaterial());
+    if(glm::dot(d, n) == 0){
+        return false;
+    }
 
-    if((glm::dot(glm::cross((b_coords - a_coords), (q - a_coords)), n)) >= 0)
+    double t = (glm::dot((a_coords - p), n))/(glm::dot(d,n));
+     glm::dvec3 P = r.at(t);
+
+    if((glm::dot(glm::cross((b_coords - a_coords), (P - a_coords)), n)) < 0)
             return false;
 
-    if((glm::dot(glm::cross((c_coords - b_coords), (q - b_coords)), n)) >= 0)
+    if((glm::dot(glm::cross((c_coords - b_coords), (P - b_coords)), n)) < 0)
             return false;
 
-    if((glm::dot(glm::cross((a_coords - c_coords), (q - c_coords)), n))  >= 0)
+    if((glm::dot(glm::cross((a_coords - c_coords), (P - c_coords)), n))  < 0)
             return false;
-   return true;
+    i.setObject(this);
+    i.setMaterial(this->getMaterial());
+    i.setT(t);
+
+    // default to one normal until phong interpolation is set up
+    i.setN(n);
+    return true;
 }
 
 // Once all the verts and faces are loaded, per vertex normals can be
