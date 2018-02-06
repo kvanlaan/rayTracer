@@ -6,6 +6,7 @@ extern TraceUI* traceUI;
 
 #include <glm/gtx/io.hpp>
 #include <iostream>
+#include <numeric>
 #include "../fileio/images.h"
 
 using namespace std;

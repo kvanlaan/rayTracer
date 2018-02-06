@@ -13,6 +13,8 @@
 #include "ui/TraceUI.h"
 #include <cmath>
 #include <algorithm>
+#include <numeric>
+#include <functional>
 #include <glm/glm.hpp>
 #include <glm/gtx/io.hpp>
 #include <string.h> // for memset
@@ -47,51 +49,89 @@ glm::dvec3 RayTracer::trace(double x, double y)
     return ret;
 }
 
+inline double
+BilinearInterpolation(double q11, double q12, double q21, double q22, double x1, double x2, double y1, double y2, double x, double y)
+{
+    double x2x1, y2y1, x2x, y2y, yy1, xx1;
+    x2x1 = x2 - x1;
+    y2y1 = y2 - y1;
+    x2x = x2 - x;
+    y2y = y2 - y;
+    yy1 = y - y1;
+    xx1 = x - x1;
+    return 1.0 / (x2x1 * y2y1) * (
+        q11 * x2x * y2y +
+        q21 * xx1 * y2y +
+        q12 * x2x * yy1 +
+        q22 * xx1 * yy1
+    );
+}
+
 glm::dvec3 RayTracer::tracePixel(int i, int j)
 {
     glm::dvec3 col(0,0,0);
-    if( ! sceneLoaded() ) return col;
 
-    if(traceUI->aaSwitch()) {
+    if( ! sceneLoaded() )
+        return col;
 
-       auto thresh = aaThresh;
-        // do antialiasing here
-        // ariel's nice method from work
+    if(traceUI->aaSwitch())
+    {
+        auto thresh = aaThresh;
 
-        //            //            for(auto y = altminmax.first; y <= altminmax.second; y += alt_step)
-        //            //            {
-        //            auto y2 = bounded_index(alts.begin(), alts.end(), y);
-        //            if(y2<1)
-        //                y2 = 1;
-        //            auto y1 = y2-1;
+        unsigned char *pixel = buffer.data() + ( i + j * buffer_width ) * 3;
 
-        //            std::vector<float> row;
-        //            //                for(auto x = wavminmax.first; x <= wavminmax.second; x += wav_step)
-        //            //                {
-        //            auto x2 = bounded_index(wavelengths.begin(), wavelengths.end(), x);
-        //            if(x2<1)
-        //                x2 = 1;
-        //            auto x1 = x2-1;
+        std::vector<glm::dvec3> colors;
 
-        //            auto q11 = data[y1][x1];
-        //            auto q12 = data[y2][x1];
-        //            auto q22 = data[y2][x2];
-        //            auto q21 = data[y1][x2];
-        //            row.push_back(BilinearInterpolation(q11, q12, q21, q22, wavelengths[x1], wavelengths[x2], alts[y1], alts[y2], x, y));
-        //            //                }
-        //            retval.push_back(row);
+        for(int pix = 0; pix < thresh; ++pix)
+        {
+            auto new_i = i - pix;
+            auto new_j = j - pix;
+            double x = double(i)/double(buffer_width);
+            double y = double(j)/double(buffer_height);
+            double new_x = double(new_i)/double(buffer_width);
+            double new_y = double(new_j)/double(buffer_height);
+            if(new_x < 0)
+                new_x = 0;
+            if(new_y < 0)
+                new_y  = 0;
+            if(new_x > 1)
+                new_x = 1;
+            if(new_y > 1)
+                new_y = 1;
+            colors.push_back(trace(x, new_y));
+            colors.push_back(trace(new_x, y));
+            colors.push_back(trace(new_x, new_y));
+            colors.push_back(trace(x, y));
+        }
+        std::vector<double> r, g, b;
+        for(const auto &color : colors)
+        {
+            r.push_back(color[0]);
+            g.push_back(color[1]);
+            b.push_back(color[2]);
+        }
+        auto r_val = std::accumulate(r.begin(), r.end(), 0.0)/r.size();
+        auto g_val = std::accumulate(g.begin(), g.end(), 0.0)/g.size();
+        auto b_val = std::accumulate(b.begin(), b.end(), 0.0)/b.size();
+        col = glm::dvec3(r_val, g_val, b_val);
+        pixel[0] = (int) (255.0 * r_val);
+        pixel[1] = (int) (255.0 * g_val);
+        pixel[1] = (int) (255.0 * b_val);
+        return col;
     }
+    else
+    {
+        double x = double(i)/double(buffer_width);
+        double y = double(j)/double(buffer_height);
 
-    double x = double(i)/double(buffer_width);
-    double y = double(j)/double(buffer_height);
+        unsigned char *pixel = buffer.data() + ( i + j * buffer_width ) * 3;
+        col = trace(x, y);
 
-    unsigned char *pixel = buffer.data() + ( i + j * buffer_width ) * 3;
-    col = trace(x, y);
-
-    pixel[0] = (int)( 255.0 * col[0]);
-    pixel[1] = (int)( 255.0 * col[1]);
-    pixel[2] = (int)( 255.0 * col[2]);
-    return col;
+        pixel[0] = (int)( 255.0 * col[0]);
+        pixel[1] = (int)( 255.0 * col[1]);
+        pixel[2] = (int)( 255.0 * col[2]);
+        return col;
+    }
 }
 
 #define VERBOSE 0
@@ -301,95 +341,10 @@ double interpolate( vector<double> &xData, vector<double> &yData, double x, bool
    return yL + dydx * ( x - xL );                                              // linear interpolation
 }
 
-
-/**
- * @brief BilinearInterpolation calculates a bilinearly interpolated point, given 4 nearest neighbors
- * @param q11 value at lower left
- * @param q12 value at upper left
- * @param q21 value at lower right
- * @param q22 value at upper right
- * @param x1 x-coord of q11, q12
- * @param x2 x-coord of q21, q22
- * @param y1 y-coord of q11, q21
- * @param y2 y-coord of q12, q22
- * @param x x-coord of desired interp point
- * @param y y-coord of desired interp point
- * @return
- */
-inline float
-BilinearInterpolation(float q11, float q12, float q21, float q22, float x1, float x2, float y1, float y2, float x, float y)
-{
-    float x2x1, y2y1, x2x, y2y, yy1, xx1;
-    x2x1 = x2 - x1;
-    y2y1 = y2 - y1;
-    x2x = x2 - x;
-    y2y = y2 - y;
-    yy1 = y - y1;
-    xx1 = x - x1;
-    return 1.0 / (x2x1 * y2y1) * (
-        q11 * x2x * y2y +
-        q21 * xx1 * y2y +
-        q12 * x2x * yy1 +
-        q22 * xx1 * yy1
-    );
-}
-
-
 //anti-aliasing for 1, 4, 9, or 16 samples
-int RayTracer::aaImage(const int samples)
+int RayTracer::aaImage()
 {
-
-    if(!traceUI->aaSwitch()) {
-        return 0;
-    }
-
-
-
-//    width = w;
-//    height = h;
-//    traceSetup(w,h);
-//    for(int x  = 0; x < w; ++x)
-//    {
-//        for(int y = 0; y < h; ++y)
-//        {
-//            tracePixel(x, y);
-//        }
-//    }
-
      return 0;
-
-//    auto thresh = aaThresh;
-
-//    const auto thresh = getAaThreshold();
-
-//    for(int x = 0; x < width; ++x)
-//    {
-//        for(int y = 0; y < height; ++y)
-//        {
-//            //            for(auto y = altminmax.first; y <= altminmax.second; y += alt_step)
-//            //            {
-//            auto y2 = bounded_index(alts.begin(), alts.end(), y);
-//            if(y2<1)
-//                y2 = 1;
-//            auto y1 = y2-1;
-
-//            std::vector<float> row;
-//            //                for(auto x = wavminmax.first; x <= wavminmax.second; x += wav_step)
-//            //                {
-//            auto x2 = bounded_index(wavelengths.begin(), wavelengths.end(), x);
-//            if(x2<1)
-//                x2 = 1;
-//            auto x1 = x2-1;
-
-//            auto q11 = data[y1][x1];
-//            auto q12 = data[y2][x1];
-//            auto q22 = data[y2][x2];
-//            auto q21 = data[y1][x2];
-//            row.push_back(BilinearInterpolation(q11, q12, q21, q22, wavelengths[x1], wavelengths[x2], alts[y1], alts[y2], x, y));
-//            //                }
-//            retval.push_back(row);
-//        }
-//    }
 
 }
 
@@ -428,4 +383,3 @@ void RayTracer::setPixel(int i, int j, glm::dvec3 color)
     pixel[1] = (int)( 255.0 * color[1]);
     pixel[2] = (int)( 255.0 * color[2]);
 }
-
