@@ -19,22 +19,11 @@ Material::~Material()
 // Apply the phong model to this point on the surface of the object, returning
 // the color of that point.
 
-//glm::dvec3 Material::shadowAttenuation(const ray& r, const isect& p) {
-//auto distance = std::sqrt(std::pow(position[0] - p[0], 2) +
-//        std::pow(position[1] - p[1], 2) +
-//        std::pow(position[2] - p[2], 2));
-//if(p.getMaterial()._trans) {
-//    return (std::pow(kt(p), distance))* getColor();
-//} else {
-//    return glm::dvec3(0,0,0);
-//}
-//}
 glm::dvec3 Material::shade(Scene* scene, const ray& r, const isect& i) const{
     glm::dvec3 p = r.at(i.getT());
     glm::dvec3 ambientIntensity = scene->ambient();
 
             auto I = ke(i) + (ka(i) *(ambientIntensity));
-
             auto n = i.getN();
             for(const auto& light : scene->getAllLights()){
                 auto l = light->getDirection(p);

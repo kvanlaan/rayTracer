@@ -44,7 +44,9 @@ glm::dvec3 RayTracer::trace(double x, double y)
     ray r(glm::dvec3(0,0,0), glm::dvec3(0,0,0), glm::dvec3(1,1,1), ray::VISIBILITY);
     scene->getCamera().rayThrough(x,y,r);
     double dummy;
-    glm::dvec3 ret = traceRay(r, glm::dvec3(1.0,1.0,1.0), traceUI->getDepth(), dummy);
+    // step which will be incremented with each recursion, checked against max-kvl
+    int depth = 0;
+    glm::dvec3 ret = traceRay(r, glm::dvec3(1.0,1.0,1.0), depth, dummy);
     ret = glm::clamp(ret, 0.0, 1.0);
     return ret;
 }
@@ -140,7 +142,6 @@ glm::dvec3 RayTracer::tracePixel(int i, int j)
 // (or places called from here) to handle reflection, refraction, etc etc.
 glm::dvec3 RayTracer::traceRay(ray& r, const glm::dvec3& thresh, int depth, double& t )
 {
-
     isect i;
     glm::dvec3 colorC;
 #if VERBOSE
@@ -163,16 +164,26 @@ glm::dvec3 RayTracer::traceRay(ray& r, const glm::dvec3& thresh, int depth, doub
         const Material& m = i.getMaterial();
         colorC = m.shade(scene.get(), r, i);
 
-
-        if(m.Refl()) {
+        if(m.Refl() && depth <= traceUI->getDepth()) {
             glm::dvec3 l = r.getDirection();
             glm::dvec3 reflectRayDirection  = ((2*(glm::dot(n, l))*n) - l);
-            ray reflectRay(glm::dvec3(0,0,0), glm::dvec3(0,0,0), reflectRayDirection, ray::REFLECTION);
+            glm::dvec3 reflectP = r.at(i.getT() - 0.0000000000000000000000000000000000000001);
+            ray reflectRay(reflectP, reflectRayDirection,  glm::dvec3(0,0,0), ray::REFLECTION);
+//            ray reflectRay(glm::dvec3(0,0,0), reflectRayDirection,  glm::dvec3(0,0,0), ray::REFLECTION);
 
-            colorC = colorC +  (m.kr(i) * m.shade(scene.get(), reflectRay, i));
             double dummy;
-            traceRay(reflectRay, glm::dvec3(1.0,1.0,1.0), traceUI->getDepth(), dummy);
+            colorC = colorC +  (m.kr(i)*traceRay(reflectRay, glm::dvec3(1.0,1.0,1.0), depth+1, dummy));
         }
+
+
+//        if(m.Trans()) {
+//            glm::dvec3 l = r.getDirection();
+//            glm::dvec3 refracRayDirection  = ((2*(glm::dot(n, l))*n) - l);
+//            ray refracRay(glm::dvec3(0,0,0), glm::dvec3(0,0,0), refracRayDirection, ray::REFRACTION);
+//            double dummy;
+//            colorC = colorC + (m.kr(i)*traceRay(refracRay, glm::dvec3(1.0,1.0,1.0), traceUI->getDepth() - 1, dummy));
+//        }
+
         //        auto ptr = scene->beginObjects();
         //        while(ptr != scene->endObjects())
         //        {
