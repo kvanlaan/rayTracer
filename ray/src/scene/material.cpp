@@ -29,7 +29,7 @@ glm::dvec3 Material::shade(Scene* scene, const ray& r, const isect& i) const{
                 auto l = light->getDirection(p);
                 glm::dvec3 viewDirection = -r.getDirection();
                 glm::dvec3 outDirection = (2*(glm::dot(n, l))*n) - l;
-              auto atten = light->distanceAttenuation(p) *(light->shadowAttenuation(r, p));
+              auto atten = light->distanceAttenuation(p) *(light->shadowAttenuation(r, p, i));
               I = I + (atten*((kd(i)*(std::max(glm::dot(l, n), 0.0))) + (ks(i)*(std::pow((std::max(glm::dot(outDirection, viewDirection), 0.0)), shininess(i))))));
             }
             return I;
