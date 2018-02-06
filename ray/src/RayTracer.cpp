@@ -164,37 +164,33 @@ glm::dvec3 RayTracer::traceRay(ray& r, const glm::dvec3& thresh, int depth, doub
         const Material& m = i.getMaterial();
         colorC = m.shade(scene.get(), r, i);
 
-        if(m.Refl() && depth <= traceUI->getDepth()) {
+        if(depth <= traceUI->getDepth()) {
+            if(m.Refl() || m.Spec()) {
             glm::dvec3 l = r.getDirection();
             glm::dvec3 reflectRayDirection  = ((2*(glm::dot(n, l))*n) - l);
             glm::dvec3 reflectP = r.at(i.getT() - 0.0000000000000000000000000000000000000001);
             ray reflectRay(reflectP, reflectRayDirection,  glm::dvec3(0,0,0), ray::REFLECTION);
-//            ray reflectRay(glm::dvec3(0,0,0), reflectRayDirection,  glm::dvec3(0,0,0), ray::REFLECTION);
-
             double dummy;
             colorC = colorC +  (m.kr(i)*traceRay(reflectRay, glm::dvec3(1.0,1.0,1.0), depth+1, dummy));
         }
+        }
 
+        if(m.Trans()&& depth <= traceUI->getDepth()) {
+            glm::dvec3 l = r.getDirection();
 
-//        if(m.Trans()) {
-//            glm::dvec3 l = r.getDirection();
-//            glm::dvec3 refracRayDirection  = ((2*(glm::dot(n, l))*n) - l);
-//            ray refracRay(glm::dvec3(0,0,0), glm::dvec3(0,0,0), refracRayDirection, ray::REFRACTION);
-//            double dummy;
-//            colorC = colorC + (m.kr(i)*traceRay(refracRay, glm::dvec3(1.0,1.0,1.0), traceUI->getDepth() - 1, dummy));
-//        }
+            glm::dvec3 refracP = r.at(i.getT() - 0.0000000000000000000000000000000000000001);
+            auto refracIndex = m.index(i);
+            auto viewDir = -r.getDirection();
+            auto cosInLight = glm::dot(n, viewDir);
+            auto inLightAngle = glm::acos(cosInLight);
+            auto rAngle = -inLightAngle;
 
-        //        auto ptr = scene->beginObjects();
-        //        while(ptr != scene->endObjects())
-        //        {
-        //            auto geo = ptr->get();
-        //            make a copy of i
-        //            auto new_i = i;
-        //            if(geo->intersect(r, new_i))
-        //            {
-        //                  traceRay(r);
-        //            }
-        //        }
+            glm::dvec3 refracRayDirection = ((refracIndex*(inLightAngle) - rAngle)*n) - (refracIndex*(viewDir));
+            refracRayDirection = glm::normalize(refracRayDirection);
+            ray refracRay(refracP, refracRayDirection, glm::dvec3(0,0,0), ray::REFRACTION);
+            double dummy;
+            colorC = colorC + (m.kt(i)*traceRay(refracRay, glm::dvec3(1.0,1.0,1.0), depth+1, dummy));
+        }
     } else {
         // No intersection.  This ray travels to infinity, so we color
         // it according to the background color, which in this (simple) case
