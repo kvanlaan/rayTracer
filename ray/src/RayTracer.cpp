@@ -60,11 +60,11 @@ BilinearInterpolation(double q11, double q12, double q21, double q22, double x1,
     yy1 = y - y1;
     xx1 = x - x1;
     return 1.0 / (x2x1 * y2y1) * (
-        q11 * x2x * y2y +
-        q21 * xx1 * y2y +
-        q12 * x2x * yy1 +
-        q22 * xx1 * yy1
-    );
+                q11 * x2x * y2y +
+                q21 * xx1 * y2y +
+                q12 * x2x * yy1 +
+                q22 * xx1 * yy1
+                );
 }
 
 glm::dvec3 RayTracer::tracePixel(int i, int j)
@@ -140,6 +140,7 @@ glm::dvec3 RayTracer::tracePixel(int i, int j)
 // (or places called from here) to handle reflection, refraction, etc etc.
 glm::dvec3 RayTracer::traceRay(ray& r, const glm::dvec3& thresh, int depth, double& t )
 {
+
     isect i;
     glm::dvec3 colorC;
 #if VERBOSE
@@ -157,20 +158,32 @@ glm::dvec3 RayTracer::traceRay(ray& r, const glm::dvec3& thresh, int depth, doub
         // Instead of just returning the result of shade(), add some
         // more steps: add in the contributions from reflected and refracted
         // rays.
+        auto n = i.getN();
 
         const Material& m = i.getMaterial();
         colorC = m.shade(scene.get(), r, i);
-//        auto ptr = scene->beginObjects();
-//        while(ptr != scene->endObjects())
-//        {
-//            auto geo = ptr->get();
-//            make a copy of i
-//            auto new_i = i;
-//            if(geo->intersect(r, new_i))
-//            {
-//                  traceRay(r);
-//            }
-//        }
+
+
+        if(m.Refl()) {
+            glm::dvec3 l = r.getDirection();
+            glm::dvec3 reflectRayDirection  = ((2*(glm::dot(n, l))*n) - l);
+            ray reflectRay(glm::dvec3(0,0,0), glm::dvec3(0,0,0), reflectRayDirection, ray::REFLECTION);
+
+            colorC = colorC +  (m.kr(i) * m.shade(scene.get(), reflectRay, i));
+            double dummy;
+            traceRay(reflectRay, glm::dvec3(1.0,1.0,1.0), traceUI->getDepth(), dummy);
+        }
+        //        auto ptr = scene->beginObjects();
+        //        while(ptr != scene->endObjects())
+        //        {
+        //            auto geo = ptr->get();
+        //            make a copy of i
+        //            auto new_i = i;
+        //            if(geo->intersect(r, new_i))
+        //            {
+        //                  traceRay(r);
+        //            }
+        //        }
     } else {
         // No intersection.  This ray travels to infinity, so we color
         // it according to the background color, which in this (simple) case
@@ -318,33 +331,33 @@ void RayTracer::traceImage(int w, int h)
 
 double interpolate( vector<double> &xData, vector<double> &yData, double x, bool extrapolate )
 {
-   int size = xData.size();
+    int size = xData.size();
 
-   int i = 0;                                                                  // find left end of interval for interpolation
-   if ( x >= xData[size - 2] )                                                 // special case: beyond right end
-   {
-      i = size - 2;
-   }
-   else
-   {
-      while ( x > xData[i+1] ) i++;
-   }
-   double xL = xData[i], yL = yData[i], xR = xData[i+1], yR = yData[i+1];      // points on either side (unless beyond ends)
-   if ( !extrapolate )                                                         // if beyond ends of array and not extrapolating
-   {
-      if ( x < xL ) yR = yL;
-      if ( x > xR ) yL = yR;
-   }
+    int i = 0;                                                                  // find left end of interval for interpolation
+    if ( x >= xData[size - 2] )                                                 // special case: beyond right end
+    {
+        i = size - 2;
+    }
+    else
+    {
+        while ( x > xData[i+1] ) i++;
+    }
+    double xL = xData[i], yL = yData[i], xR = xData[i+1], yR = yData[i+1];      // points on either side (unless beyond ends)
+    if ( !extrapolate )                                                         // if beyond ends of array and not extrapolating
+    {
+        if ( x < xL ) yR = yL;
+        if ( x > xR ) yL = yR;
+    }
 
-   double dydx = ( yR - yL ) / ( xR - xL );                                    // gradient
+    double dydx = ( yR - yL ) / ( xR - xL );                                    // gradient
 
-   return yL + dydx * ( x - xL );                                              // linear interpolation
+    return yL + dydx * ( x - xL );                                              // linear interpolation
 }
 
 //anti-aliasing for 1, 4, 9, or 16 samples
 int RayTracer::aaImage()
 {
-     return 0;
+    return 0;
 
 }
 

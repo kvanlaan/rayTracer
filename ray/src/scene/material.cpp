@@ -36,9 +36,7 @@ glm::dvec3 Material::shade(Scene* scene, const ray& r, const isect& i) const{
             auto I = ke(i) + (ka(i) *(ambientIntensity));
 
             auto n = i.getN();
-
             for(const auto& light : scene->getAllLights()){
-
                 auto l = light->getDirection(p);
                 glm::dvec3 viewDirection = -r.getDirection();
                 glm::dvec3 outDirection = (2*(glm::dot(n, l))*n) - l;
