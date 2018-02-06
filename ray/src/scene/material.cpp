@@ -20,6 +20,7 @@ Material::~Material()
 // the color of that point.
 
 glm::dvec3 Material::shade(Scene* scene, const ray& r, const isect& i) const{
+    // phong shading
     glm::dvec3 p = r.at(i.getT());
     glm::dvec3 ambientIntensity = scene->ambient();
 
