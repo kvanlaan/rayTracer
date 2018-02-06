@@ -13,6 +13,8 @@
 #include "ui/TraceUI.h"
 #include <cmath>
 #include <algorithm>
+#include <numeric>
+#include <functional>
 #include <glm/glm.hpp>
 #include <glm/gtx/io.hpp>
 #include <string.h> // for memset
@@ -74,34 +76,33 @@ glm::dvec3 RayTracer::tracePixel(int i, int j)
     if(traceUI->aaSwitch())
     {
         auto thresh = aaThresh;
-        double x = double(i)/double(buffer_width);
-        double y = double(j)/double(buffer_height);
+        //double x = double(i)/double(buffer_width);
+        //double y = double(j)/double(buffer_height);
 
         unsigned char *pixel = buffer.data() + ( i + j * buffer_width ) * 3;
 
-//        col = trace(x, y);
-
         std::vector<glm::dvec3> colors;
-//        std::vector<double> r;
-//        std::vector<double> g;
-//        std::vector<double> b;
 
-        //TODO: check that sample is not larger than buffer size
         for(int pix = 0; pix < thresh; ++pix)
         {
-            auto new_x = x - pix;
-            auto new_y = y - pix;
+            auto new_i = i - pix;
+            auto new_j = j - pix;
+            double x = double(i)/double(buffer_width);
+            double y = double(j)/double(buffer_height);
+            double new_x = double(new_i)/double(buffer_width);
+            double new_y = double(new_j)/double(buffer_height);
             if(new_x < 0)
-                new_x = x + pix;
+                new_x = 0;
             if(new_y < 0)
-                new_y  = y + pix;
-            if(new_x > buffer_width)
-                new_x = x - pix;
-            if(new_y > buffer_height)
-                new_y = y - pix;
+                new_y  = 0;
+            if(new_x > 1)
+                new_x = 1;
+            if(new_y > 1)
+                new_y = 1;
             colors.push_back(trace(x, new_y));
             colors.push_back(trace(new_x, y));
             colors.push_back(trace(new_x, new_y));
+            colors.push_back(trace(x, y));
         }
         std::vector<double> r, g, b;
         for(const auto &color : colors)
@@ -117,34 +118,7 @@ glm::dvec3 RayTracer::tracePixel(int i, int j)
         pixel[0] = (int) (255.0 * r_val);
         pixel[1] = (int) (255.0 * g_val);
         pixel[1] = (int) (255.0 * b_val);
-//        pixel[0] = (int)( 255.0 * col[0]);
-//        pixel[1] = (int)( 255.0 * col[1]);
-//        pixel[2] = (int)( 255.0 * col[2]);
         return col;
-//        // do antialiasing here
-//        //       for(auto y = altminmax.first; y <= altminmax.second; y += alt_step)
-//        //       {
-//        auto y2 = bounded_index(alts.begin(), alts.end(), y);
-//        if(y2<1)
-//            y2 = 1;
-//        auto y1 = y2-1;
-
-//        std::vector<float> row;
-//        //                for(auto x = wavminmax.first; x <= wavminmax.second; x += wav_step)
-//        //                {
-//        auto x2 = bounded_index(wavelengths.begin(), wavelengths.end(), x);
-//        if(x2<1)
-//            x2 = 1;
-//        auto x1 = x2-1;
-
-//        auto q11 = data[y1][x1];
-//        auto q12 = data[y2][x1];
-//        auto q22 = data[y2][x2];
-//        auto q21 = data[y1][x2];
-//        row.push_back(BilinearInterpolation(q11, q12, q21, q22, wavelengths[x1], wavelengths[x2], alts[y1], alts[y2], x, y));
-//        //                }
-//        retval.push_back(row);
-//        return col;
     }
     else
     {
@@ -428,4 +402,3 @@ void RayTracer::setPixel(int i, int j, glm::dvec3 color)
     pixel[1] = (int)( 255.0 * color[1]);
     pixel[2] = (int)( 255.0 * color[2]);
 }
-
