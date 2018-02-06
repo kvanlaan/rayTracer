@@ -52,36 +52,36 @@ glm::dvec3 RayTracer::tracePixel(int i, int j)
     glm::dvec3 col(0,0,0);
     if( ! sceneLoaded() ) return col;
 
-    if(traceUI->aaSwitch()) {
+//    if(traceUI->aaSwitch()) {
 
-       auto thresh = aaThresh;
-        // do antialiasing here
-        // ariel's nice method from work
+//       auto thresh = aaThresh;
+//        // do antialiasing here
+//        // ariel's nice method from work
 
-        //            //            for(auto y = altminmax.first; y <= altminmax.second; y += alt_step)
-        //            //            {
-        //            auto y2 = bounded_index(alts.begin(), alts.end(), y);
-        //            if(y2<1)
-        //                y2 = 1;
-        //            auto y1 = y2-1;
+//        //            //            for(auto y = altminmax.first; y <= altminmax.second; y += alt_step)
+//        //            //            {
+//        //            auto y2 = bounded_index(alts.begin(), alts.end(), y);
+//        //            if(y2<1)
+//        //                y2 = 1;
+//        //            auto y1 = y2-1;
 
-        //            std::vector<float> row;
-        //            //                for(auto x = wavminmax.first; x <= wavminmax.second; x += wav_step)
-        //            //                {
-        //            auto x2 = bounded_index(wavelengths.begin(), wavelengths.end(), x);
-        //            if(x2<1)
-        //                x2 = 1;
-        //            auto x1 = x2-1;
+//        //            std::vector<float> row;
+//        //            //                for(auto x = wavminmax.first; x <= wavminmax.second; x += wav_step)
+//        //            //                {
+//        //            auto x2 = bounded_index(wavelengths.begin(), wavelengths.end(), x);
+//        //            if(x2<1)
+//        //                x2 = 1;
+//        //            auto x1 = x2-1;
 
-        //            auto q11 = data[y1][x1];
-        //            auto q12 = data[y2][x1];
-        //            auto q22 = data[y2][x2];
-        //            auto q21 = data[y1][x2];
-        //            row.push_back(BilinearInterpolation(q11, q12, q21, q22, wavelengths[x1], wavelengths[x2], alts[y1], alts[y2], x, y));
-        //            //                }
-        //            retval.push_back(row);
-       return ;
-    }
+//        //            auto q11 = data[y1][x1];
+//        //            auto q12 = data[y2][x1];
+//        //            auto q22 = data[y2][x2];
+//        //            auto q21 = data[y1][x2];
+//        //            row.push_back(BilinearInterpolation(q11, q12, q21, q22, wavelengths[x1], wavelengths[x2], alts[y1], alts[y2], x, y));
+//        //            //                }
+//        //            retval.push_back(row);
+//       return ;
+//    }
 
     double x = double(i)/double(buffer_width);
     double y = double(j)/double(buffer_height);
@@ -303,24 +303,28 @@ double interpolate( vector<double> &xData, vector<double> &yData, double x, bool
 }
 
 
-/**
- * @brief BilinearInterpolation calculates a bilinearly interpolated point, given 4 nearest neighbors
- * @param q11 value at lower left
- * @param q12 value at upper left
- * @param q21 value at lower right
- * @param q22 value at upper right
- * @param x1 x-coord of q11, q12
- * @param x2 x-coord of q21, q22
- * @param y1 y-coord of q11, q21
- * @param y2 y-coord of q12, q22
- * @param x x-coord of desired interp point
- * @param y y-coord of desired interp point
- * @return
- */
-inline float
-BilinearInterpolation(float q11, float q12, float q21, float q22, float x1, float x2, float y1, float y2, float x, float y)
+//inline double
+//BilinearInterpolation(double q11, double q12, double q21, double q22, double x1, double x2, double y1, double y2, double x, double y)
+//{
+//    double x2x1, y2y1, x2x, y2y, yy1, xx1;
+//    x2x1 = x2 - x1;
+//    y2y1 = y2 - y1;
+//    x2x = x2 - x;
+//    y2y = y2 - y;
+//    yy1 = y - y1;
+//    xx1 = x - x1;
+//    return 1.0 / (x2x1 * y2y1) * (
+//        q11 * x2x * y2y +
+//        q21 * xx1 * y2y +
+//        q12 * x2x * yy1 +
+//        q22 * xx1 * yy1
+//    );
+//}
+
+inline double
+BilinearInterpolation(double q11, double q12, double q21, double q22, double x1, double x2, double y1, double y2, double x, double y)
 {
-    float x2x1, y2y1, x2x, y2y, yy1, xx1;
+    double x2x1, y2y1, x2x, y2y, yy1, xx1;
     x2x1 = x2 - x1;
     y2y1 = y2 - y1;
     x2x = x2 - x;
@@ -335,62 +339,98 @@ BilinearInterpolation(float q11, float q12, float q21, float q22, float x1, floa
     );
 }
 
-
 //anti-aliasing for 1, 4, 9, or 16 samples
-int RayTracer::aaImage(const int samples)
+int RayTracer::aaImage()
 {
 
     if(!traceUI->aaSwitch()) {
         return 0;
     }
 
-    traceSetup(w,h);
+//    traceSetup(w,h);
 
-    width = w;
-    height = h;
+//    width = buffer_width;
+//    height = buffer_height;
 
-    for(int x  = 0; x < w; ++x)
-    {
-        for(int y = 0; y < h; ++y)
-        {
-            tracePixel(x, y);
-        }
-    }
+    thresh = traceUI->getAaThreshold();
+
+    std::vector<std::vector<double>> new_pix(buffer_height);
+    for(auto &arr : new_pix)
+        arr.resize(buffer_width);
+
+//    std::vector<double> x_vals;
+//    std::vector<double> y_vals;
+
+//    for(size_t x = 0; x < buffer_width; x += thresh)
+//    {
+//        for(size_t y =
+//        unsigned char *pixel = buffer.data() + ( i + j * buffer_width ) * 3;
+//        x_vals.push_back();
+//    }
+//    unsigned char *pixel = buffer.data() + ( i + j * buffer_width ) * 3;
+//    col = trace(x, y);
+
+//    pixel[0] = (int)( 255.0 * col[0]);
+//    pixel[1] = (int)( 255.0 * col[1]);
+//    pixel[2] = (int)( 255.0 * col[2]);
 
      return 0;
 
-//    auto thresh = aaThresh;
+//     auto altminmax = std::make_pair(alts.front(), alts.back());
+//     auto wavminmax = std::make_pair(wavelengths.front(), wavelengths.back());
 
-//    const auto thresh = getAaThreshold();
+     std::vector<std::vector<double>> x_v_r();
+     std::vector<std::vector<double>> x_v_g();
+     std::vector<std::vector<double>> x_v_b();
 
-//    for(int x = 0; x < width; ++x)
-//    {
-//        for(int y = 0; y < height; ++y)
-//        {
-//            //            for(auto y = altminmax.first; y <= altminmax.second; y += alt_step)
-//            //            {
-//            auto y2 = bounded_index(alts.begin(), alts.end(), y);
-//            if(y2<1)
-//                y2 = 1;
-//            auto y1 = y2-1;
+     for(auto y1 = 0; y1 <= buffer_height; y1 += thresh)
+     {
+//         auto y2 = raws::bounded_index(alts.begin(), alts.end(), y);
+         auto y2 = y + thresh;
+         if(y2 > buffer_height)
+             y2 = buffer_height;
+//         auto y1 = y2-1;
 
-//            std::vector<float> row;
-//            //                for(auto x = wavminmax.first; x <= wavminmax.second; x += wav_step)
-//            //                {
-//            auto x2 = bounded_index(wavelengths.begin(), wavelengths.end(), x);
-//            if(x2<1)
-//                x2 = 1;
-//            auto x1 = x2-1;
+         std::vector<double> red;
+         std::vector<double> green;
+         std::vector<double> blue;
+         for(auto x1 = 0; x1 <= buffer_width; x1 += thresh)
+         {
+//             auto x2 = raws::bounded_index(wavelengths.begin(), wavelengths.end(), x);
+             x2 = x1 + thresh;
+             if(x2>buffer_width)
+                 x2 = buffer_width;
+//             auto x1 = x2-1;
 
-//            auto q11 = data[y1][x1];
-//            auto q12 = data[y2][x1];
-//            auto q22 = data[y2][x2];
-//            auto q21 = data[y1][x2];
-//            row.push_back(BilinearInterpolation(q11, q12, q21, q22, wavelengths[x1], wavelengths[x2], alts[y1], alts[y2], x, y));
-//            //                }
-//            retval.push_back(row);
-//        }
-//    }
+//             auto q11 = data[y1][x1];
+//             auto q12 = data[y2][x1];
+//             auto q22 = data[y2][x2];
+//             auto q21 = data[y1][x2];
+             auto q11r = buffer[y1][x1];
+             auto q12r = buffer[y2][x1];
+             auto q22r = buffer[y2][x2];
+             auto q21r = buffer[y1][x2];
+
+             auto q11g = buffer[y1][x1];
+             auto q12g = buffer[y2][x1];
+             auto q22g = buffer[y2][x2];
+             auto q21g = buffer[y1][x2];
+
+             auto q11b = buffer[y1][x1];
+             auto q12b = buffer[y2][x1];
+             auto q22b = buffer[y2][x2];
+             auto q21b = buffer[y1][x2];
+//             row.push_back(BilinearInterpolation(q11, q12, q21, q22, wavelengths[x1], wavelengths[x2], alts[y1], alts[y2], x, y));
+             row.push_back(BilinearInterpolation(q11, q12, q21, q22, x1, x2, y1, y2, x1, y1));
+             row.push_back(BilinearInterpolation(q11, q12, q21, q22, x1, x2, y1, y2, x1, y1));
+             row.push_back(BilinearInterpolation(q11, q12, q21, q22, x1, x2, y1, y2, x1, y1));
+         }
+         retval.push_back(row);
+     }
+
+//     return retval;
+
+
 
 }
 
