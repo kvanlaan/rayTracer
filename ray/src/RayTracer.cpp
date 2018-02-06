@@ -116,7 +116,7 @@ glm::dvec3 RayTracer::tracePixel(int i, int j)
         col = glm::dvec3(r_val, g_val, b_val);
         pixel[0] = (int) (255.0 * r_val);
         pixel[1] = (int) (255.0 * g_val);
-        pixel[1] = (int) (255.0 * b_val);
+        pixel[2] = (int) (255.0 * b_val);
         return col;
     }
     else
