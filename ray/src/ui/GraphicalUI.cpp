@@ -319,7 +319,7 @@ void GraphicalUI::cb_render(Fl_Widget* o, void* v) {
 			aaStart = now = prev = clock();
             int aaPixels = pUI->raytracer->aaImage(pUI->getAaThreshold());
 
-            int aaPixels = pUI->raytracer->aaImage();
+//            int aaPixels = pUI->raytracer->aaImage();
 			while (!pUI->raytracer->checkRender())
 			{
 				// check for input and refresh view every so often while tracing

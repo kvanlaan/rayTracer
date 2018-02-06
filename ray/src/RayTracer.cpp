@@ -80,7 +80,6 @@ glm::dvec3 RayTracer::tracePixel(int i, int j)
         //            row.push_back(BilinearInterpolation(q11, q12, q21, q22, wavelengths[x1], wavelengths[x2], alts[y1], alts[y2], x, y));
         //            //                }
         //            retval.push_back(row);
-       return ;
     }
 
     double x = double(i)/double(buffer_width);
@@ -344,18 +343,18 @@ int RayTracer::aaImage(const int samples)
         return 0;
     }
 
-    traceSetup(w,h);
 
-    width = w;
-    height = h;
 
-    for(int x  = 0; x < w; ++x)
-    {
-        for(int y = 0; y < h; ++y)
-        {
-            tracePixel(x, y);
-        }
-    }
+//    width = w;
+//    height = h;
+//    traceSetup(w,h);
+//    for(int x  = 0; x < w; ++x)
+//    {
+//        for(int y = 0; y < h; ++y)
+//        {
+//            tracePixel(x, y);
+//        }
+//    }
 
      return 0;
 

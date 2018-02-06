@@ -17,48 +17,54 @@ Material::~Material()
 
 // Apply the phong model to this point on the surface of the object, returning
 // the color of that point.
-glm::dvec3 Material::shade(Scene* scene, const ray& r, const isect& i) const
-{
-	// YOUR CODE HERE
 
-    std::vector<double> attens;
+//glm::dvec3 Material::shadowAttenuation(const ray& r, const isect& p) {
+//auto distance = std::sqrt(std::pow(position[0] - p[0], 2) +
+//        std::pow(position[1] - p[1], 2) +
+//        std::pow(position[2] - p[2], 2));
+//if(p.getMaterial()._trans) {
+//    return (std::pow(kt(p), distance))* getColor();
+//} else {
+//    return glm::dvec3(0,0,0);
+//}
+//}
+glm::dvec3 Material::shade(Scene* scene, const ray& r, const isect& i) const{
+        glm::dvec3 p = r.at(i.getT());
+        glm::dvec3 ambientIntensity = scene->ambient();
+        auto I = ke(i) + (ka(i) *(ambientIntensity));
+        for(const auto& light : scene->getAllLights()){
+          auto atten = light->distanceAttenuation(p) *(light->shadowAttenuation(r, p));
+          I = I + (atten*(kd(i) + ks(i)));
+        }
+        return I;
+        // original actual code
+        // YOUR CODE HERE
 
-    for(const auto& light : scene->getAllLights())
-    {
-        auto dist_atten = light->distanceAttenuation(i.getN());
-        attens.push_back(dist_atten);
-    }
+            // For now, this method just returns the diffuse color of the object.
+            // This gives a single matte color for every distinct surface in the
+            // scene, and that's it.  Simple, but enough to get you started.
+            // (It's also inconsistent with the phong model...)
 
-	// For now, this method just returns the diffuse color of the object.
-	// This gives a single matte color for every distinct surface in the
-	// scene, and that's it.  Simple, but enough to get you started.
-	// (It's also inconsistent with the phong model...)
+            // Your mission is to fill in this method with the rest of the phong
+            // shading model, including the contributions of all the light sources.
+            // You will need to call both distanceAttenuation() and
+            // shadowAttenuation()
+            // somewhere in your code in order to compute shadows and light falloff.
+            //	if( debugMode )
+            //		std::cout << "Debugging Phong code..." << std::endl;
 
-	// Your mission is to fill in this method with the rest of the phong
-	// shading model, including the contributions of all the light sources.
-	// You will need to call both distanceAttenuation() and
-	// shadowAttenuation()
-	// somewhere in your code in order to compute shadows and light falloff.
-	//	if( debugMode )
-	//		std::cout << "Debugging Phong code..." << std::endl;
-
-	// When you're iterating through the lights,
-	// you'll want to use code that looks something
-	// like this:
-	//
-	// for ( const auto& pLight : scene->getAllLights() )
-	// {
-	//              // pLight has type unique_ptr<Light>
-	// 		.
-	// 		.
-	// 		.
-	// }
-    auto ey = kd(i);
-    auto o  = kd(i) * (std::accumulate(attens.begin(), attens.end(), 0.0)/attens.size());
-    if(!attens.empty())
-        return kd(i) * (std::accumulate(attens.begin(), attens.end(), 0.0)/attens.size());
-    else
-        return kd(i);
+            // When you're iterating through the lights,
+            // you'll want to use code that looks something
+            // like this:
+            //
+            // for ( const auto& pLight : scene->getAllLights() )
+            // {
+            //              // pLight has type unique_ptr<Light>
+            // 		.
+            // 		.
+            // 		.
+            // }
+//        return kd(i);
 }
 
 TextureMap::TextureMap(string filename)
