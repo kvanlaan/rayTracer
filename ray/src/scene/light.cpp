@@ -82,9 +82,7 @@ glm::dvec3 PointLight::shadowAttenuation(const ray& r, const glm::dvec3& p) cons
 //    }
 
 //     return glm::dvec3(1.0);
-
-      return glm::dvec3(1,1,1);
-
+        return glm::dvec3(1,1,1);
 }
 
 #define VERBOSE 0
