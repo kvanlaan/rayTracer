@@ -71,19 +71,18 @@ glm::dvec3 PointLight::shadowAttenuation(const ray& r, const glm::dvec3& p) cons
 {
     // YOUR CODE HERE:
     // You should implement shadow-handling code here.
+//    auto distance = std::sqrt(std::pow(position[0] - p[0], 2) +
+//            std::pow(position[1] - p[1], 2) +
+//            std::pow(position[2] - p[2], 2));
 
-    // pseudocode of our attempt
-    //        auto distance = std::sqrt(std::pow(position[0] - p[0], 2) +
-    //                std::pow(position[1] - p[1], 2) +
-    //                std::pow(position[2] - p[2], 2));
-    //       if(p.getMaterial()._trans) {
-    //           return (std::pow(kt(p), distance))* getColor();
-    //      } else {
-    //            return glm::dvec3(0,0,0);
-    //       }
-    return glm::dvec3(1,1,1);
+//    if(p.getMaterial()._trans) {
+//         return glm::dvec3(0,0,0);
+//    } else {
 
+//    }
+
+//     return glm::dvec3(1.0);
+        return glm::dvec3(1,1,1);
 }
 
 #define VERBOSE 0
-
