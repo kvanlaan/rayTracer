@@ -91,6 +91,15 @@ glm::dvec3 TextureMap::getMappedValue(const glm::dvec2& coord) const
     // and use these to perform bilinear interpolation
     // of the values.
 
+    auto x = coord[0];
+    auto y = coord[1];
+
+    auto x_val = width * x;
+    auto y_val = height * y;
+
+//    auto r = width * height + ;
+//    auto g =
+
     return glm::dvec3(1, 1, 1);
 }
 
