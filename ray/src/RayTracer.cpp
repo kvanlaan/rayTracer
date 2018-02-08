@@ -154,27 +154,30 @@ glm::dvec3 RayTracer::traceRay(ray& r, const glm::dvec3& thresh, int depth, doub
         colorC = m.shade(scene.get(), r, i);
 
         if(depth <= traceUI->getDepth()) {
-            if(m.Refl() || m.Spec()) {
-            glm::dvec3 l = r.getDirection();
-            glm::dvec3 reflectRayDirection  = ((2*(glm::dot(n, l))*n) - l);
-            glm::dvec3 reflectP = r.at(i.getT() - 0.0000000000000000000000000000000000000001);
-            ray reflectRay(reflectP, reflectRayDirection,  glm::dvec3(0,0,0), ray::REFLECTION);
-            double dummy;
-            colorC = colorC +  (m.kr(i)*traceRay(reflectRay, glm::dvec3(1.0,1.0,1.0), depth+1, dummy));
-        }
+            if(m.Refl()) {
+                glm::dvec3 l = r.getDirection();
+                glm::dvec3 reflectRayDirection  = ((2*(glm::dot(n, l))*n) - l);
+                glm::dvec3 reflectP = r.at(i.getT() - 0.0000000000000000000000000000000000000001);
+                ray reflectRay(reflectP, reflectRayDirection,  glm::dvec3(0,0,0), ray::REFLECTION);
+                double dummy;
+                colorC = colorC + (m.kr(i)*traceRay(reflectRay, glm::dvec3(1.0,1.0,1.0), depth+1, dummy));
+            }
         }
 
         if(m.Trans()&& depth <= traceUI->getDepth()) {
-            glm::dvec3 l = r.getDirection();
 
             glm::dvec3 refracP = r.at(i.getT() - 0.0000000000000000000000000000000000000001);
             auto refracIndex = m.index(i);
+
             auto viewDir = -r.getDirection();
             auto cosInLight = glm::dot(n, viewDir);
             auto inLightAngle = glm::acos(cosInLight);
-            auto rAngle = -inLightAngle;
+            // I tried to use the formula for cos of refrac angle in the useful equations sheet, but it gave a bad result
+            // auto cosRefracAngle = sqrt(1-(std::pow(refracIndex, 2)*(1-(std::pow(cosInLight, 2)))));
 
-            glm::dvec3 refracRayDirection = ((refracIndex*(inLightAngle) - rAngle)*n) - (refracIndex*(viewDir));
+            // I used my own method in the end based on my understanding of the unit circle
+            auto cosRefracAngle = glm::cos(-inLightAngle);
+            glm::dvec3 refracRayDirection = (((refracIndex*(cosInLight)) - cosRefracAngle)*n) - (refracIndex*(viewDir));
             refracRayDirection = glm::normalize(refracRayDirection);
             ray refracRay(refracP, refracRayDirection, glm::dvec3(0,0,0), ray::REFRACTION);
             double dummy;
