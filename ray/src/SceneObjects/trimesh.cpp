@@ -129,6 +129,7 @@ bool TrimeshFace::intersectLocal(ray& r, isect& i) const
     i.setT(t);
 
     if(parent->vertNorms) {
+        // phong interpolation of normals
         auto uNumerator = (glm::dot(glm::cross((c_coords - a_coords), (P - a_coords)), n));
         auto uDenominator = (glm::dot(glm::cross((c_coords - a_coords), (b_coords - a_coords)), n));
         auto u = uNumerator/uDenominator;
