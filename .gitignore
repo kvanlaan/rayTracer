@@ -1,2 +1,3 @@
-ray/build
+ray/build*
 ray/CMakeLists.txt.user
+scenes/*.png
