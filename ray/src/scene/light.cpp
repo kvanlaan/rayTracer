@@ -15,12 +15,26 @@ double DirectionalLight::distanceAttenuation(const glm::dvec3& P) const
 }
 
 
-glm::dvec3 DirectionalLight::shadowAttenuation(const ray& r, const glm::dvec3& p) const
+glm::dvec3 DirectionalLight::shadowAttenuation(const ray& r, const glm::dvec3& p, const isect &i) const
 {
     // YOUR CODE HERE:
     // You should implement shadow-handling code here.
+    auto pos = i.getN();
+    auto distance = std::sqrt(std::pow(pos[0] - p[0], 2) +
+            std::pow(pos[1] - p[1], 2) +
+            std::pow(pos[2] - p[2], 2));
 
-    return glm::dvec3(1.0, 1.0, 1.0);
+    if(i.getMaterial().Trans())
+    {
+        auto r = pow((i.getMaterial().kt(i)[0]), distance);
+        auto g = pow((i.getMaterial().kt(i)[1]), distance);
+        auto b = pow((i.getMaterial().kt(i)[2]), distance);
+        return color * glm::dvec3(r,g,b);
+    }
+    else
+    {
+        return glm::dvec3(1,1,1);
+    }
 }
 
 glm::dvec3 DirectionalLight::getColor() const
@@ -67,20 +81,27 @@ glm::dvec3 PointLight::getDirection(const glm::dvec3& P) const
 }
 
 
-glm::dvec3 PointLight::shadowAttenuation(const ray& r, const glm::dvec3& p) const
+glm::dvec3 PointLight::shadowAttenuation(const ray& r, const glm::dvec3& p, const isect& i) const
 {
     // YOUR CODE HERE:
     // You should implement shadow-handling code here.
-    // pseudocode of our attempt
-        //        auto distance = std::sqrt(std::pow(position[0] - p[0], 2) +
-        //                std::pow(position[1] - p[1], 2) +
-        //                std::pow(position[2] - p[2], 2));
-        //       if(p.getMaterial()._trans) {
-        //           return (std::pow(kt(p), distance))* getColor();
-        //      } else {
-        //            return glm::dvec3(0,0,0);
-        //       }
+    auto pos = i.getN();
+    auto distance = std::sqrt(std::pow(pos[0] - p[0], 2) +
+            std::pow(pos[1] - p[1], 2) +
+            std::pow(pos[2] - p[2], 2));
+
+    if(i.getMaterial().Trans())
+    {
+        auto r = pow((i.getMaterial().kt(i)[0]), distance);
+        auto g = pow((i.getMaterial().kt(i)[1]), distance);
+        auto b = pow((i.getMaterial().kt(i)[2]), distance);
+        return color * glm::dvec3(r,g,b);
+    }
+    else
+    {
         return glm::dvec3(1,1,1);
+    }
 }
 
 #define VERBOSE 0
+

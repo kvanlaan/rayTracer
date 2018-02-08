@@ -61,33 +61,39 @@ glm::dvec3 RayTracer::tracePixel(int i, int j)
 
     if(traceUI->aaSwitch())
     {
-        auto thresh = aaThresh;
+        auto thresh = samples;
 
         unsigned char *pixel = buffer.data() + ( i + j * buffer_width ) * 3;
 
         std::vector<glm::dvec3> colors;
+        double x = double(i)/double(buffer_width);
+        double y = double(j)/double(buffer_height);
 
-        for(int pix = 0; pix < thresh; ++pix)
+        for(auto pix = 0; pix <= thresh; ++pix)
         {
             auto new_i = i - pix;
             auto new_j = j - pix;
-            double x = double(i)/double(buffer_width);
-            double y = double(j)/double(buffer_height);
+            auto new_p = i + pix;
+            auto new_q = j + pix;
+
             double new_x = double(new_i)/double(buffer_width);
             double new_y = double(new_j)/double(buffer_height);
+            double new_w = double(new_p)/double(buffer_width);
+            double new_z = double(new_q)/double(buffer_height);
             if(new_x < 0)
                 new_x = 0;
             if(new_y < 0)
                 new_y  = 0;
-            if(new_x > 1)
-                new_x = 1;
-            if(new_y > 1)
-                new_y = 1;
+            if(new_w > 1)
+                new_w = 1;
+            if(new_z > 1)
+                new_z = 1;
             colors.push_back(trace(x, new_y));
             colors.push_back(trace(new_x, y));
             colors.push_back(trace(new_x, new_y));
-            colors.push_back(trace(x, y));
         }
+
+        colors.push_back(trace(x, y));
         std::vector<double> r, g, b;
         for(const auto &color : colors)
         {
