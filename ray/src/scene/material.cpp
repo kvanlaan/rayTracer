@@ -97,16 +97,14 @@ glm::dvec3 TextureMap::getMappedValue(const glm::dvec2& coord) const
 //    auto x_val = width * x;
 //    auto y_val = height * y;
 
-    auto row_val = x * width * 3;
-    auto col_val = y * height;
+    auto row_val = x * width;
+    auto col_val = y * height * 3;
 
-    auto r = row_val * col_val;
-    auto g = row_val * col_val + 1;
-    auto b = row_val * col_val + 2;
+    auto r = data[row_val * col_val];
+    auto g = data[row_val * col_val + 1];
+    auto b = data[row_val * col_val + 2];
 
     return glm::dvec3(r, g, b);
-
-//    auto g =
 
 //    return glm::dvec3(1, 1, 1);
 }
