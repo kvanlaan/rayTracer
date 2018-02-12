@@ -12,6 +12,8 @@
 #include "scene/cubeMap.h"
 #include "scene/ray.h"
 
+class BoundingBox;
+
 class Scene;
 class Pixel {
 public:
@@ -22,6 +24,15 @@ public:
 	unsigned char* value;
 };
 
+class Octnode
+{
+public:
+    Octnode(){}
+    Octnode(const BoundingBox* box) : boundingBox(box){}
+
+    const BoundingBox* boundingBox;
+    std::vector<Octnode> children;
+};
 
 class RayTracer {
 public:
@@ -70,6 +81,11 @@ private:
     int width, height;
 
 	bool m_bBufferReady;
+
+    void addOctnode(const Octnode *node);
+    void createOctree();
+
+    Octnode octreeRoot;
 
 };
 

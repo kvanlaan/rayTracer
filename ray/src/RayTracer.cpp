@@ -6,6 +6,7 @@
 #include "scene/light.h"
 #include "scene/material.h"
 #include "scene/ray.h"
+#include "scene/scene.h"
 
 #include "parser/Tokenizer.h"
 #include "parser/Parser.h"
@@ -266,6 +267,40 @@ bool RayTracer::loadScene(const char* fn)
     return true;
 }
 
+//recursive function to search out and add octree nodes
+void RayTracer::addOctnode(const Octnode* node)
+{
+    auto box_min = node->boundingBox->getMin();
+    auto box_max = node->boundingBox->getMax();
+
+    auto x_min = box_min[0];
+    auto x_max = box_max[0];
+    auto y_min = box_min[1];
+    auto y_max = box_max[1];
+    auto z_min = box_min[2];
+    auto z_max = box_max[2];
+
+    auto x_half = (x_max - x_min)/2;
+    auto y_half = (y_max - y_min)/2;
+    auto z_half = (z_max - z_min)/2;
+
+    BoundingBox b1 = BoundingBox(glm::dvec3(x_min, y_min, z_min), glm::dvec3(x_half, y_half, z_half));
+    BoundingBox b2 = BoundingBox(glm::dvec3(x_min, y_min, z_half), glm::dvec3(x_half, y_half, z_max));
+    BoundingBox b3 = BoundingBox(glm::dvec3(x_min, y_half, z_min), glm::dvec3(x_half, y_max, z_half));
+    BoundingBox b4 = BoundingBox(glm::dvec3(x_min, y_half, z_half), glm::dvec3(x_half, y_max, z_max));
+
+    BoundingBox b5 = BoundingBox(glm::dvec3(x_half, y_min, z_min), glm::dvec3(x_max, y_half, z_half));
+    BoundingBox b6 = BoundingBox(glm::dvec3(x_half, y_min, z_half), glm::dvec3(x_max, y_half, z_max));
+    BoundingBox b7 = BoundingBox(glm::dvec3(x_half, y_half, z_min), glm::dvec3(x_max, y_max, z_half));
+    BoundingBox b8 = BoundingBox(glm::dvec3(x_half, y_half, z_half), glm::dvec3(x_max, y_max, z_max));
+}
+
+void RayTracer::createOctree()
+{
+    octreeRoot = Octnode(&scene->bounds());
+    addOctnode(&octreeRoot);
+}
+
 void RayTracer::traceSetup(int w, int h)
 {
     if (buffer_width != w || buffer_height != h)
@@ -290,6 +325,7 @@ void RayTracer::traceSetup(int w, int h)
 
     // YOUR CODE HERE
     // FIXME: Additional initializations
+    createOctree();
 }
 
 /*
