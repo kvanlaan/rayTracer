@@ -268,10 +268,10 @@ bool RayTracer::loadScene(const char* fn)
 }
 
 //recursive function to search out and add octree nodes
-void RayTracer::addOctnode(const Octnode* node)
+void RayTracer::addOctnode(Octnode* node)
 {
-    auto box_min = node->boundingBox->getMin();
-    auto box_max = node->boundingBox->getMax();
+    auto box_min = node->boundingBox.getMin();
+    auto box_max = node->boundingBox.getMax();
 
     auto x_min = box_min[0];
     auto x_max = box_max[0];
@@ -284,20 +284,48 @@ void RayTracer::addOctnode(const Octnode* node)
     auto y_half = (y_max - y_min)/2;
     auto z_half = (z_max - z_min)/2;
 
-    BoundingBox b1 = BoundingBox(glm::dvec3(x_min, y_min, z_min), glm::dvec3(x_half, y_half, z_half));
-    BoundingBox b2 = BoundingBox(glm::dvec3(x_min, y_min, z_half), glm::dvec3(x_half, y_half, z_max));
-    BoundingBox b3 = BoundingBox(glm::dvec3(x_min, y_half, z_min), glm::dvec3(x_half, y_max, z_half));
-    BoundingBox b4 = BoundingBox(glm::dvec3(x_min, y_half, z_half), glm::dvec3(x_half, y_max, z_max));
+    if(x_half > 0.5 && y_half > 0.5  && z_half > 0.5)
+    {
+        node->children.push_back(Octnode(BoundingBox(glm::dvec3(x_min, y_min, z_min), glm::dvec3(x_half, y_half, z_half))));
+        node->children.push_back(Octnode(BoundingBox(glm::dvec3(x_min, y_min, z_half), glm::dvec3(x_half, y_half, z_max))));
+        node->children.push_back(Octnode(BoundingBox(glm::dvec3(x_min, y_half, z_min), glm::dvec3(x_half, y_max, z_half))));
+        node->children.push_back(Octnode(BoundingBox(glm::dvec3(x_min, y_half, z_half), glm::dvec3(x_half, y_max, z_max))));
 
-    BoundingBox b5 = BoundingBox(glm::dvec3(x_half, y_min, z_min), glm::dvec3(x_max, y_half, z_half));
-    BoundingBox b6 = BoundingBox(glm::dvec3(x_half, y_min, z_half), glm::dvec3(x_max, y_half, z_max));
-    BoundingBox b7 = BoundingBox(glm::dvec3(x_half, y_half, z_min), glm::dvec3(x_max, y_max, z_half));
-    BoundingBox b8 = BoundingBox(glm::dvec3(x_half, y_half, z_half), glm::dvec3(x_max, y_max, z_max));
+        node->children.push_back(Octnode(BoundingBox(glm::dvec3(x_half, y_min, z_min), glm::dvec3(x_max, y_half, z_half))));
+        node->children.push_back(Octnode(BoundingBox(glm::dvec3(x_half, y_min, z_half), glm::dvec3(x_max, y_half, z_max))));
+        node->children.push_back(Octnode(BoundingBox(glm::dvec3(x_half, y_half, z_min), glm::dvec3(x_max, y_max, z_half))));
+        node->children.push_back(Octnode(BoundingBox(glm::dvec3(x_half, y_half, z_half), glm::dvec3(x_max, y_max, z_max))));
+    }
+}
+
+void RayTracer::RecurseOctree(Octnode* node, const ray& r, double& tMin, double& tMax)
+{
+    if(node->boundingBox.intersect(r, tMin, tMax))
+    {
+        if(!node->children.empty())
+            for(auto child_node : node->children)
+                RecurseOctree(&child_node, r, tMin, tMax);
+        else
+        {
+            //case 1: we haven't added the children for this node yet
+            if(node->boundingBox.volume() != 1)
+            {
+
+            }
+            //case 2: the smallest possible box
+            else
+            {
+                //actually raytrace?
+            }
+        }
+
+    }
 }
 
 void RayTracer::createOctree()
 {
-    octreeRoot = Octnode(&scene->bounds());
+    sceneBox = scene->bounds();
+    octreeRoot = Octnode(sceneBox);
     addOctnode(&octreeRoot);
 }
 

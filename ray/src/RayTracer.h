@@ -11,8 +11,7 @@
 #include <thread>
 #include "scene/cubeMap.h"
 #include "scene/ray.h"
-
-class BoundingBox;
+#include "scene/bbox.h"
 
 class Scene;
 class Pixel {
@@ -28,9 +27,9 @@ class Octnode
 {
 public:
     Octnode(){}
-    Octnode(const BoundingBox* box) : boundingBox(box){}
+    Octnode(BoundingBox box) : boundingBox(box){}
 
-    const BoundingBox* boundingBox;
+    BoundingBox boundingBox;
     std::vector<Octnode> children;
 };
 
@@ -65,6 +64,8 @@ public:
 
 	bool stopTrace;
 
+    void RecurseOctree(Octnode* node, const ray &r, double &tMin, double &tMax);
+
 private:
 	glm::dvec3 trace(double x, double y);
 
@@ -82,9 +83,10 @@ private:
 
 	bool m_bBufferReady;
 
-    void addOctnode(const Octnode *node);
+    void addOctnode(Octnode *node);
     void createOctree();
 
+    BoundingBox sceneBox;
     Octnode octreeRoot;
 
 };
