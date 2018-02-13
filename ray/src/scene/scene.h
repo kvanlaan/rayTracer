@@ -35,15 +35,6 @@ class Scene;
 template <typename Obj>
 class KdTree;
 
-class Octnode
-{
-public:
-    Octnode(){}
-    Octnode(BoundingBox box) : boundingBox(box){}
-
-    BoundingBox boundingBox;
-    std::vector<Octnode> children;
-};
 
 class SceneElement {
 public:
@@ -180,7 +171,7 @@ public:
 
 	// The defult does nothing; this is here because it is not required
 	// that you implement this function if you create your own scene
-	// objects.
+    // objects.
 	virtual void glDrawLocal(int quality, bool actualMaterials,
 	                         bool actualTextures) const
 	{
@@ -225,6 +216,18 @@ protected:
 	unique_ptr<Material> material;
 };
 
+class Octnode
+{
+public:
+    Octnode(){}
+    Octnode(BoundingBox box) : boundingBox(box){}
+
+    BoundingBox boundingBox;
+    std::vector<Octnode> children;
+    std::vector<std::shared_ptr<Geometry>> objects;
+};
+
+
 class Scene {
 public:
 	typedef std::vector<Light*>::iterator liter;
@@ -240,20 +243,21 @@ public:
 	void add(Geometry* obj);
 	void add(Light* light);
 
-	bool intersect(ray& r, isect& i) const;
+    bool intersect(ray& r, isect& i);
+//    bool intersect(ray& r, isect& i) const;
 
 	auto beginLights() const { return lights.begin(); }
 	auto endLights() const { return lights.end(); }
 	const auto& getAllLights() const { return lights; }
 
-	auto beginObjects() const { return objects.cbegin(); }
+    auto beginObjects() const { return objects.cbegin(); }
 	auto endObjects() const { return objects.cend(); }
 
 	const Camera& getCamera() const { return camera; }
 	Camera& getCamera() { return camera; }
 
-    void addOctnode(Octnode *node);
-    void RecurseOctree(Octnode* node, const ray &r, double &tMin, double &tMax);
+    void addOctnode(Octnode *node, int depth);
+    bool RecurseOctree(Octnode* node, ray& r, isect& i, int depth);
 
 	// For efficiency reasons, we'll store texture maps in a cache
 	// in the Scene.  This makes sure they get deleted when the scene
@@ -276,11 +280,9 @@ public:
 
 	const BoundingBox& bounds() const { return sceneBounds; }
 
-    Octnode rootNode;
-
 
 private:
-	std::vector<std::unique_ptr<Geometry>> objects;
+    std::vector<std::shared_ptr<Geometry>> objects;
 	std::vector<std::unique_ptr<Light>> lights;
 	Camera camera;
 
@@ -299,6 +301,8 @@ private:
 	BoundingBox sceneBounds;
 
 	KdTree<Geometry>* kdtree;
+
+    std::unique_ptr<Octnode> rootNode;
 
 public:
 	// This is used for debugging purposes only.
