@@ -35,6 +35,16 @@ class Scene;
 template <typename Obj>
 class KdTree;
 
+class Octnode
+{
+public:
+    Octnode(){}
+    Octnode(BoundingBox box) : boundingBox(box){}
+
+    BoundingBox boundingBox;
+    std::vector<Octnode> children;
+};
+
 class SceneElement {
 public:
 	virtual ~SceneElement() {}
@@ -242,6 +252,9 @@ public:
 	const Camera& getCamera() const { return camera; }
 	Camera& getCamera() { return camera; }
 
+    void addOctnode(Octnode *node);
+    void RecurseOctree(Octnode* node, const ray &r, double &tMin, double &tMax);
+
 	// For efficiency reasons, we'll store texture maps in a cache
 	// in the Scene.  This makes sure they get deleted when the scene
 	// is destroyed.
@@ -262,6 +275,8 @@ public:
 	            bool actualTextures) const;
 
 	const BoundingBox& bounds() const { return sceneBounds; }
+
+    Octnode rootNode;
 
 
 private:

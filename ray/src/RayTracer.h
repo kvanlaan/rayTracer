@@ -23,16 +23,6 @@ public:
 	unsigned char* value;
 };
 
-class Octnode
-{
-public:
-    Octnode(){}
-    Octnode(BoundingBox box) : boundingBox(box){}
-
-    BoundingBox boundingBox;
-    std::vector<Octnode> children;
-};
-
 class RayTracer {
 public:
 	RayTracer();
@@ -64,8 +54,6 @@ public:
 
 	bool stopTrace;
 
-    void RecurseOctree(Octnode* node, const ray &r, double &tMin, double &tMax);
-
 private:
 	glm::dvec3 trace(double x, double y);
 
@@ -82,13 +70,6 @@ private:
     int width, height;
 
 	bool m_bBufferReady;
-
-    void addOctnode(Octnode *node);
-    void createOctree();
-
-    BoundingBox sceneBox;
-    Octnode octreeRoot;
-
 };
 
 #endif // __RAYTRACER_H__
