@@ -93,27 +93,25 @@ glm::dvec3 TextureMap::getMappedValue(const glm::dvec2& coord) const
 
     auto x = coord[1];
     auto y = coord[0];
-//    auto x = coord[0];
-//    auto y = coord[1];
 
     auto row_val = x * (width - 1);
     auto col_val = y * (height - 1);
 
     const int x1 = std::floor(row_val);
     const int y1 = std::floor(col_val);
-//    const int x2 = std::ceil(row_val);
-//    const int y2 = std::ceil(col_val);
+    const int x2 = std::ceil(row_val);
+    const int y2 = std::ceil(col_val);
 
     assert(x1 >= 0 && x1 <= width);
     assert(y1 >= 0 && y1 <= height);
-//    assert(x2 >= 0 && x2 <= width);
-//    assert(y2 >= 0 && y2 <= height);
+    assert(x2 >= 0 && x2 <= width);
+    assert(y2 >= 0 && y2 <= height);
 
     std::vector<glm::dvec3> color_vec;
     color_vec.push_back(getPixelAt(x1, y1));
-//    color_vec.push_back(getPixelAt(x1, y2));
-//    color_vec.push_back(getPixelAt(x2, y1));
-//    color_vec.push_back(getPixelAt(x2, y2));
+    color_vec.push_back(getPixelAt(x1, y2));
+    color_vec.push_back(getPixelAt(x2, y1));
+    color_vec.push_back(getPixelAt(x2, y2));
 
     std::vector<float> r, g, b;
     for(auto color : color_vec)
@@ -142,21 +140,9 @@ glm::dvec3 TextureMap::getPixelAt(/*const*/ int x, /*const*/ int y) const
     auto prepend = row_add * row_len;
     auto col = (y > 0) ? (y - 1) : 0;
 
-    float r = data[prepend + (col * 3)];
-    float g = data[prepend + (col * 3) + 1];
-    float b = data[prepend + (col * 3) + 2];
-
-    //this should be 0, 0, 255
-//    if(x == 197 && y == 174)
-//    {
-//        std::cerr << r << std::endl;
-//        std::cerr << g << std::endl;
-//        std::cerr << b << std::endl;
-//    }
-//    if(r == 0 && g == 0 && b == 255)
-//    {
-//        std::cerr << x << ", " << y << std::endl;
-//    }
+    double r = data[prepend + (col * 3)]/128;
+    double g = data[prepend + (col * 3) + 1]/128;
+    double b = data[prepend + (col * 3) + 2]/128;
 
     return glm::dvec3(r, g, b);
 }
