@@ -23,8 +23,7 @@ using std::string;
 /* The TextureMap class can be used to store a texture map,
    which consists of a bitmap and various accessors to
    it.  To implement basic texture mapping, you'll want to 
-   fill in the getMappedValue function to implement basic 
-   texture mapping.
+   fill in the getMappedValue function.
 */
 class TextureMap {
     public:
@@ -49,6 +48,7 @@ class TextureMap {
 protected:
        int width;
        int height;
+       //the texture map has 3 color vals for each pixel in width/height
        std::vector<uint8_t> data;
 };
 
