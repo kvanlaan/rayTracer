@@ -193,13 +193,29 @@ glm::dvec3 RayTracer::traceRay(ray& r, const glm::dvec3& thresh, int depth, doub
         //       Check traceUI->cubeMap() to see if cubeMap is loaded
         //       and enabled.
 
-        colorC = glm::dvec3(0.0, 0.0, 0.0);
+        // Implement cube mapping (skybox) as a user-selectable option.
+        if(traceUI->cubeMap()) {
+            auto cubeMap = traceUI->getCubeMap();
+
+            colorC = cubeMap->getColor(r);
+
+            // look up color in cube map
+            // look up their color in the cube map rather than the default black color.
+        } else {
+
+            colorC = glm::dvec3(0.0, 0.0, 0.0);
+        }
     }
 #if VERBOSE
     std::cerr << "== depth: " << depth+1 << " done, returning: " << colorC << std::endl;
 #endif
     return colorC;
 }
+
+
+
+
+
 
 RayTracer::RayTracer()
     : scene(nullptr), buffer(0), thresh(0), buffer_width(256), buffer_height(256), m_bBufferReady(false)
