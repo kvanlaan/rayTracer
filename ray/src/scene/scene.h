@@ -256,7 +256,7 @@ public:
 	const Camera& getCamera() const { return camera; }
 	Camera& getCamera() { return camera; }
 
-    void addOctnode(Octnode *node, int depth);
+    void fillOctnode(Octnode *node, const int depth);
     void RecurseOctree(Octnode* node, ray& r, isect& i, int depth, bool &have_one);
 
 	// For efficiency reasons, we'll store texture maps in a cache
