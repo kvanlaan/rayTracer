@@ -224,7 +224,7 @@ public:
 
     BoundingBox boundingBox;
     std::vector<Octnode> children;
-    std::vector<std::shared_ptr<Geometry>> objects;
+    std::vector<Geometry*> objects;
 };
 
 
@@ -257,7 +257,7 @@ public:
 	Camera& getCamera() { return camera; }
 
     void addOctnode(Octnode *node, int depth);
-    bool RecurseOctree(Octnode* node, ray& r, isect& i, int depth);
+    void RecurseOctree(Octnode* node, ray& r, isect& i, int depth, bool &have_one);
 
 	// For efficiency reasons, we'll store texture maps in a cache
 	// in the Scene.  This makes sure they get deleted when the scene
@@ -282,7 +282,7 @@ public:
 
 
 private:
-    std::vector<std::shared_ptr<Geometry>> objects;
+    std::vector<std::unique_ptr<Geometry>> objects;
 	std::vector<std::unique_ptr<Light>> lights;
 	Camera camera;
 
