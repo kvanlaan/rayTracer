@@ -332,8 +332,10 @@ void RayTracer::traceImage(int w, int h)
     width = w;
     height = h;
 
+    #pragma omp parallel for
     for(int x  = 0; x < w; ++x)
     {
+    #pragma omp parallel for
         for(int y = 0; y < h; ++y)
         {
             tracePixel(x, y);

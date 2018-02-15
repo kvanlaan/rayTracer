@@ -99,10 +99,10 @@ protected:
 	int m_nSize = 512;        // Size of the traced image
 	int m_nDepth = 0;         // Max depth of recursion
 	int m_nThreshold = 0;     // Threshold for interpolation within block
-	int m_nBlockSize = 4;     // Blocksize (square, even, power of 2 preferred)
+    int m_nBlockSize = 4;     // Blocksize (square, even, power of 2 preferred)
 	int m_nSuperSamples = 3;  // Supersampling rate (1-d) for antialiasing
 	int m_nAaThreshold = 100; // Pixel neighborhood difference for supersampling
-	int m_nTreeDepth = 15;    // maximum kdTree depth
+    int m_nTreeDepth = 8;    // maximum kdTree depth
 	int m_nLeafSize = 10;     // target number of objects per leaf
 	int m_nFilterWidth = 1;   // width of cubemap filter
 
