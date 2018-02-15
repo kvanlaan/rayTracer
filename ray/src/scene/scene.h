@@ -244,7 +244,7 @@ public:
 	void add(Light* light);
 
     bool intersect(ray& r, isect& i);
-//    bool intersect(ray& r, isect& i) const;
+    bool intersectNoTree(ray& r, isect& i);
 
 	auto beginLights() const { return lights.begin(); }
 	auto endLights() const { return lights.end(); }
@@ -256,7 +256,7 @@ public:
 	const Camera& getCamera() const { return camera; }
 	Camera& getCamera() { return camera; }
 
-    void fillOctnode(Octnode *node, const int depth);
+    void fillOctnode(Octnode &node, const int depth);
     void RecurseOctree(Octnode* node, ray& r, isect& i, int depth, bool &have_one);
 
 	// For efficiency reasons, we'll store texture maps in a cache
@@ -303,6 +303,8 @@ private:
 	KdTree<Geometry>* kdtree;
 
     std::unique_ptr<Octnode> rootNode;
+    int maxRecursion;
+    bool recurse;
 
 public:
 	// This is used for debugging purposes only.
