@@ -237,7 +237,7 @@ public:
 
 	TransformRoot transformRoot;
 
-	Scene();
+    Scene();
 	virtual ~Scene();
 
 	void add(Geometry* obj);
@@ -258,7 +258,7 @@ public:
 
     void fillOctnode(Octnode &node, const int depth);
     void RecurseOctree(Octnode* node, ray& r, isect& i, int depth, bool &have_one);
-    void setMaxRecursion(int depth);
+    void setMaxRecursion(const int depth);
 	// For efficiency reasons, we'll store texture maps in a cache
 	// in the Scene.  This makes sure they get deleted when the scene
 	// is destroyed.
@@ -304,7 +304,6 @@ private:
 
     std::unique_ptr<Octnode> rootNode;
     int maxRecursion;
-    bool recurse;
 
 public:
 	// This is used for debugging purposes only.

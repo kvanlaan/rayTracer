@@ -293,7 +293,7 @@ void RayTracer::traceSetup(int w, int h)
     // YOUR CODE HERE
     // FIXME: Additional initializations
     if(traceUI->kdSwitch()) {
-        auto recDepth = traceUI->getDepth();
+        auto recDepth = traceUI->getMaxDepth();
         scene->setMaxRecursion(recDepth);
     }
 }
