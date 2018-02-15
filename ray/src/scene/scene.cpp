@@ -89,7 +89,7 @@ void Geometry::ComputeBoundingBox() {
     bounds.setMin(glm::dvec3(newMin));
 }
 
-Scene::Scene()
+Scene::Scene() : rootNode(nullptr), maxRecursion(0)
 {
 }
 
@@ -97,10 +97,11 @@ Scene::~Scene()
 {
 }
 
-void Scene::add(Geometry* obj) {
+void Scene::add(Geometry* obj)
+{
 	obj->ComputeBoundingBox();
 	sceneBounds.merge(obj->getBoundingBox());
-	objects.emplace_back(obj);
+    objects.emplace_back(obj);
 }
 
 void Scene::add(Light* light)
@@ -109,27 +110,181 @@ void Scene::add(Light* light)
 }
 
 
-// Get any intersection with an object.  Return information about the 
-// intersection through the reference parameter.
-bool Scene::intersect(ray& r, isect& i) const {
-	double tmin = 0.0;
-	double tmax = 0.0;
-	bool have_one = false;
-	for(const auto& obj : objects) {
-		isect cur;
-		if( obj->intersect(r, cur) ) {
-			if(!have_one || (cur.getT() < i.getT())) {
-				i = cur;
-				have_one = true;
-			}
-		}
-	}
-	if(!have_one)
-		i.setT(1000.0);
-	// if debugging,
-	if (TraceUI::m_debug)
-		intersectCache.push_back(std::make_pair(new ray(r), new isect(i)));
-	return have_one;
+/**Get any intersection with an object.  Return information about the
+ intersection through the reference parameter.*/
+bool Scene::intersectNoTree(ray& r, isect& i) {
+    double tmin = 0.0;
+    double tmax = 0.0;
+    bool have_one = false;
+    for(const auto& obj : objects) {
+        isect cur;
+        if( obj->intersect(r, cur) ) {
+            if(!have_one || (cur.getT() < i.getT())) {
+                i = cur;
+                have_one = true;
+            }
+        }
+    }
+    if(!have_one)
+        i.setT(1000.0);
+    // if debugging,
+    if (TraceUI::m_debug)
+        intersectCache.push_back(std::make_pair(new ray(r), new isect(i)));
+    return have_one;
+}
+
+void Scene::setMaxRecursion(const int depth) {
+    maxRecursion = depth;
+}
+
+/**
+ * @brief Scene::fillOctnode fills the given octnode with either child nodes
+ * or an object node
+ * @param node  output: node to be filled
+ * @param depth input: recursion depth
+ */
+void Scene::fillOctnode(Octnode& node, const int depth)
+{
+    if(!node.children.empty() || !node.objects.empty())
+        return;
+
+    //if we haven't reached the recursion depth yet, we'll add some children
+    if(depth < maxRecursion)
+    {
+        auto box_min = node.boundingBox.getMin();
+        auto box_max = node.boundingBox.getMax();
+
+        auto x_min = box_min[0];
+        auto x_max = box_max[0];
+        auto y_min = box_min[1];
+        auto y_max = box_max[1];
+        auto z_min = box_min[2];
+        auto z_max = box_max[2];
+
+        //determine the halfway pts so that we can subdivide on each plane
+        auto x_half = (x_max - x_min)/2;
+        auto y_half = (y_max - y_min)/2;
+        auto z_half = (z_max - z_min)/2;
+
+        //split the bounding box into 8 cubes. these become the children
+
+        node.children.resize(8);
+
+        node.children[0] = (Octnode(BoundingBox(glm::dvec3(x_min, y_min, z_min), glm::dvec3(x_half, y_half, z_half))));
+        node.children[1] = (Octnode(BoundingBox(glm::dvec3(x_min, y_min, z_half), glm::dvec3(x_half, y_half, z_max))));
+        node.children[2] = (Octnode(BoundingBox(glm::dvec3(x_min, y_half, z_min), glm::dvec3(x_half, y_max, z_half))));
+        node.children[3] = (Octnode(BoundingBox(glm::dvec3(x_min, y_half, z_half), glm::dvec3(x_half, y_max, z_max))));
+
+        node.children[4] = (Octnode(BoundingBox(glm::dvec3(x_half, y_min, z_min), glm::dvec3(x_max, y_half, z_half))));
+        node.children[5] = (Octnode(BoundingBox(glm::dvec3(x_half, y_min, z_half), glm::dvec3(x_max, y_half, z_max))));
+        node.children[6] = (Octnode(BoundingBox(glm::dvec3(x_half, y_half, z_min), glm::dvec3(x_max, y_max, z_half))));
+        node.children[7] = (Octnode(BoundingBox(glm::dvec3(x_half, y_half, z_half), glm::dvec3(x_max, y_max, z_max))));
+    }
+    //if we have reached the recursion depth, we're going to add ptrs to the objects
+    //bound by this box to the node
+    else if (depth == maxRecursion)
+    {
+        //check each obj against the bounding box
+        for(int i = 0; i < objects.size(); ++i)
+        {
+            objects[i]->ComputeBoundingBox();
+            auto bbox = objects[i]->getBoundingBox();
+            if(node.boundingBox.intersects(bbox))
+            {
+                node.objects.emplace_back(objects[i].get());
+            }
+        }
+        //kind of hacky: there may be end nodes with no
+        //intersecting objects, so we'll give those a
+        //nullptr
+        if(node.objects.empty())
+            node.objects.push_back(nullptr);
+    }
+}
+
+/**
+ * @brief Scene::RecurseOctree recurses through the octree to determine
+ * if there is an intersection for the ray. This is a lazy method;
+ * we won't add nodes to the octree unless we're certain they're needed
+ * @param node      the current octnode
+ * @param r         the current ray
+ * @param i         isect
+ * @param depth     recursion depth
+ * @param have_one  output: whether or not there is an intersection
+ */
+void Scene::RecurseOctree(Octnode* node,
+                          ray& r,
+                          isect& i,
+                          int depth,
+                          bool& have_one)
+{
+    if(depth <= maxRecursion)
+    {
+        double tmax, tmin;
+        auto intersecting = node->boundingBox.intersect(r, tmax, tmin);
+        //if the ray intersects the current node
+        if(intersecting)
+        {
+            //terminating condition; we've reached the recursion
+            //depth of the tree and now we need to find the intersections
+            if(!node->objects.empty())
+            {
+                if (node->objects[0] != nullptr)
+                {
+                    for(auto obj : node->objects)
+                    {
+                        isect cur;
+                        auto does_intersect = obj->intersect(r, cur);
+                        if( does_intersect )
+                        {
+                            if(!have_one || (cur.getT() < i.getT()))
+                            {
+                                i = cur;
+                                have_one = true;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                //if this node exists in the tree, we'll
+                //recurse through its children looking for intersections
+                if(!node->children.empty())
+                {
+                    for(auto &child_node : node->children)
+                        RecurseOctree(&child_node, r, i, depth + 1, have_one);
+                }
+                //if this node has no children and no objects, it hasn't been
+                //filled yet. we have to fill it and then go thru its children
+                //or objects
+                else
+                {
+                    fillOctnode(*node, depth);
+                    RecurseOctree(node, r, i, depth, have_one);
+                }
+            }
+        }
+    }
+}
+
+//new intersect function using the octree recursion function
+bool Scene::intersect(ray& r, isect& i)
+{
+    if(maxRecursion != 0)
+    {
+        //if the tree hasn't been constructed yet, add the root node
+        if(rootNode == nullptr)
+        {
+            rootNode.reset(new Octnode(bounds()));
+            fillOctnode(*rootNode.get(), 0);
+        }
+        bool have_one = false;
+        RecurseOctree(rootNode.get(), r, i, 0, have_one);
+        return have_one;
+    }
+    else
+        return intersectNoTree(r, i);
 }
 
 TextureMap* Scene::getTexture(string name) {

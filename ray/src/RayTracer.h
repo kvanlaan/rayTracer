@@ -11,6 +11,7 @@
 #include <thread>
 #include "scene/cubeMap.h"
 #include "scene/ray.h"
+#include "scene/bbox.h"
 
 class Scene;
 class Pixel {
@@ -21,7 +22,6 @@ public:
 	int jy;
 	unsigned char* value;
 };
-
 
 class RayTracer {
 public:
@@ -70,7 +70,6 @@ private:
     int width, height;
 
 	bool m_bBufferReady;
-
 };
 
 #endif // __RAYTRACER_H__

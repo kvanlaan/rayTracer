@@ -35,6 +35,7 @@ class Scene;
 template <typename Obj>
 class KdTree;
 
+
 class SceneElement {
 public:
 	virtual ~SceneElement() {}
@@ -48,7 +49,7 @@ public:
 	}
 
 protected:
-	SceneElement(Scene* s) : scene(s) {}
+    SceneElement(Scene* s) : scene(s) {}
 
 	Scene* scene;
 };
@@ -170,7 +171,7 @@ public:
 
 	// The defult does nothing; this is here because it is not required
 	// that you implement this function if you create your own scene
-	// objects.
+    // objects.
 	virtual void glDrawLocal(int quality, bool actualMaterials,
 	                         bool actualTextures) const
 	{
@@ -215,6 +216,18 @@ protected:
 	unique_ptr<Material> material;
 };
 
+class Octnode
+{
+public:
+    Octnode(){}
+    Octnode(BoundingBox box) : boundingBox(box){}
+
+    BoundingBox boundingBox;
+    std::vector<Octnode> children;
+    std::vector<Geometry*> objects;
+};
+
+
 class Scene {
 public:
 	typedef std::vector<Light*>::iterator liter;
@@ -224,24 +237,28 @@ public:
 
 	TransformRoot transformRoot;
 
-	Scene();
+    Scene();
 	virtual ~Scene();
 
 	void add(Geometry* obj);
 	void add(Light* light);
 
-	bool intersect(ray& r, isect& i) const;
+    bool intersect(ray& r, isect& i);
+    bool intersectNoTree(ray& r, isect& i);
 
 	auto beginLights() const { return lights.begin(); }
 	auto endLights() const { return lights.end(); }
 	const auto& getAllLights() const { return lights; }
 
-	auto beginObjects() const { return objects.cbegin(); }
+    auto beginObjects() const { return objects.cbegin(); }
 	auto endObjects() const { return objects.cend(); }
 
 	const Camera& getCamera() const { return camera; }
 	Camera& getCamera() { return camera; }
 
+    void fillOctnode(Octnode &node, const int depth);
+    void RecurseOctree(Octnode* node, ray& r, isect& i, int depth, bool &have_one);
+    void setMaxRecursion(const int depth);
 	// For efficiency reasons, we'll store texture maps in a cache
 	// in the Scene.  This makes sure they get deleted when the scene
 	// is destroyed.
@@ -265,7 +282,7 @@ public:
 
 
 private:
-	std::vector<std::unique_ptr<Geometry>> objects;
+    std::vector<std::unique_ptr<Geometry>> objects;
 	std::vector<std::unique_ptr<Light>> lights;
 	Camera camera;
 
@@ -283,7 +300,10 @@ private:
 	// are exempt from this requirement.
 	BoundingBox sceneBounds;
 
-	KdTree<Geometry>* kdtree;
+    KdTree<Geometry>* kdtree;
+
+    std::unique_ptr<Octnode> rootNode;
+    int maxRecursion;
 
 public:
 	// This is used for debugging purposes only.
