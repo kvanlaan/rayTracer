@@ -49,7 +49,7 @@ public:
 	}
 
 protected:
-	SceneElement(Scene* s) : scene(s) {}
+    SceneElement(Scene* s) : scene(s) {}
 
 	Scene* scene;
 };
@@ -258,7 +258,7 @@ public:
 
     void fillOctnode(Octnode &node, const int depth);
     void RecurseOctree(Octnode* node, ray& r, isect& i, int depth, bool &have_one);
-
+    void setMaxRecursion(int depth);
 	// For efficiency reasons, we'll store texture maps in a cache
 	// in the Scene.  This makes sure they get deleted when the scene
 	// is destroyed.
@@ -300,7 +300,7 @@ private:
 	// are exempt from this requirement.
 	BoundingBox sceneBounds;
 
-	KdTree<Geometry>* kdtree;
+    KdTree<Geometry>* kdtree;
 
     std::unique_ptr<Octnode> rootNode;
     int maxRecursion;

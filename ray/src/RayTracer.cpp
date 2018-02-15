@@ -7,6 +7,7 @@
 #include "scene/material.h"
 #include "scene/ray.h"
 #include "scene/scene.h"
+#include "scene/kdTree.h"
 
 #include "parser/Tokenizer.h"
 #include "parser/Parser.h"
@@ -291,6 +292,10 @@ void RayTracer::traceSetup(int w, int h)
 
     // YOUR CODE HERE
     // FIXME: Additional initializations
+    if(traceUI->kdSwitch()) {
+        auto recDepth = traceUI->getDepth();
+        scene->setMaxRecursion(recDepth);
+    }
 }
 
 /*

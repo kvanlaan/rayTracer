@@ -133,6 +133,10 @@ bool Scene::intersectNoTree(ray& r, isect& i) {
     return have_one;
 }
 
+void Scene::setMaxRecursion(int depth) {
+    maxRecursion = depth;
+}
+
 /**
  * @brief Scene::fillOctnode fills the given octnode with either child nodes
  * or an object node
@@ -212,6 +216,8 @@ void Scene::RecurseOctree(Octnode* node,
                           int depth,
                           bool& have_one)
 {
+    if(depth < maxRecursion)
+    {
     double tmax, tmin;
     auto intersecting = node->boundingBox.intersect(r, tmax, tmin);
     //if the ray intersects the current node
@@ -257,6 +263,7 @@ void Scene::RecurseOctree(Octnode* node,
             }
         }
     }
+}
 }
 
 //new intersect function using the octree recursion function
