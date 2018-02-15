@@ -126,6 +126,7 @@ glm::dvec3 TextureMap::getMappedValue(const glm::dvec2& coord) const
     float b_val = accumulate(b.begin(), b.end(), 0.0)/b.size();
 
     return glm::dvec3(r_val, g_val, b_val);
+//    return glm::dvec3(0, 0, 0);
 }
 
 glm::dvec3 TextureMap::getPixelAt(/*const*/ int x, /*const*/ int y) const
@@ -140,9 +141,10 @@ glm::dvec3 TextureMap::getPixelAt(/*const*/ int x, /*const*/ int y) const
     auto prepend = row_add * row_len;
     auto col = (y > 0) ? (y - 1) : 0;
 
-    double r = data[prepend + (col * 3)]/128;
-    double g = data[prepend + (col * 3) + 1]/128;
-    double b = data[prepend + (col * 3) + 2]/128;
+    // issue here
+    double r = data[prepend + (col * 3)]/255.0;
+    double g = data[prepend + (col * 3) + 1]/255.0;
+    double b = data[prepend + (col * 3) + 2]/255.0;
 
     return glm::dvec3(r, g, b);
 }
@@ -157,6 +159,7 @@ glm::dvec3 MaterialParameter::value(const isect& is) const
 
 double MaterialParameter::intensityValue(const isect& is) const
 {
+ // check out intensity here
     if (0 != _textureMap) {
         glm::dvec3 value(
                 _textureMap->getMappedValue(is.getUVCoordinates()));
