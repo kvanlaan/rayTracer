@@ -15,8 +15,7 @@ glm::dvec3 CubeMap::getColor(ray r) const
     double x = -rayDir[0];
     double y = rayDir[1];
     double z = rayDir[2];
-
-
+    float maximum, uc, vc;
     int xPositive = x > 0 ? 1 : 0;
     int yPositive = y > 0 ? 1 : 0;
     int zPositive = z > 0 ? 1 : 0;
@@ -26,55 +25,53 @@ glm::dvec3 CubeMap::getColor(ray r) const
     float absoluteY = std::abs(y);
     float absoluteZ = std::abs(z);
 
-    float maxAxis, uc, vc;
 
-    // POSITIVE X
+    // if x is positive
     if (xPositive && absoluteX >= absoluteY && absoluteX >= absoluteZ) {
         faceIndex = 0;
-        maxAxis = absoluteX;
+        maximum = absoluteX;
         uc = -z;
         vc = y;
     }
-    // NEGATIVE X
+    // x is negative
     if (!xPositive && absoluteX >= absoluteY && absoluteX >= absoluteZ) {
         faceIndex = 1;
-        maxAxis = absoluteX;
+        maximum = absoluteX;
         uc = z;
         vc = y;
     }
-    // POSITIVE Y
+    // if y is positive
     if (yPositive && absoluteY >= absoluteX && absoluteY >= absoluteZ) {
         faceIndex = 2;
-        maxAxis = absoluteY;
+        maximum = absoluteY;
         uc = x;
         vc = -z;
     }
-    // NEGATIVE Y
+    // if y is negative
     if (!yPositive && absoluteY >= absoluteX && absoluteY >= absoluteZ) {
         faceIndex = 3;
-        maxAxis = absoluteY;
+        maximum = absoluteY;
         uc = x;
         vc = z;
     }
 
-
-    // POSITIVE Z
+    // if z is positive
     if (zPositive && absoluteZ >= absoluteX && absoluteZ >= absoluteY) {
         faceIndex = 4;
-        maxAxis = absoluteZ;
+        maximum = absoluteZ;
         uc = x;
         vc = y;
     }
-    // NEGATIVE Z
+    // if z is negative
     if (!zPositive && absoluteZ >= absoluteX && absoluteZ >= absoluteY) {
         faceIndex = 5;
-        maxAxis = absoluteZ;
+        maximum = absoluteZ;
         uc = -x;
         vc = y;
     }
 
-    u = 0.5f * (uc / maxAxis + 1.0f);
-    v = 0.5f * (vc / maxAxis + 1.0f);
+    u = 0.5f * (uc / maximum + 1.0f);
+    v = 0.5f * (vc / maximum + 1.0f);
     glm::dvec2 uvCoords =  glm::dvec2(u, v);
     auto textureMap = tMap[faceIndex].get();
     glm::dvec3 colorC = textureMap->getMappedValue(uvCoords);
